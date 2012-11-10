@@ -15,9 +15,11 @@
  * along with boks. If not, see <http://www.gnu.org/licenses/>.
  **/
 
-// The version and model are used to identify the box to the client
-#define VERSION 			"0.1.2" 			// Must be 5 chars
-#define MODEL 				"test.boks       " // Must be 16 chars
+// The version and model are used to identify the box to the client. The
+// version must be a 5 char string. The model musy be a 16 char string,
+// optionally right-padded with whitespace for short mode names.
+#define VERSION 			"0.1.2"
+#define MODEL 				"dev.boks        "
 
 // The respective pins on Arduino to which the buttons are connected
 #define BUTTON_PIN_1 		2
@@ -82,7 +84,7 @@ void setup()
 	digitalWrite(BUTTON_PIN_4, HIGH);    
 }
 
-boolean debounceLoop(int buttonPin, int buttonNr) {
+boolean debounceLoop(int buttonPin, int buttonNr)
 	
 	/**
 	 * Repeatedly samples a given pin, and sends a buttonNr if sufficient
@@ -97,6 +99,7 @@ boolean debounceLoop(int buttonPin, int buttonNr) {
 	 * true or false, depending on whether a sample has been detected
 	 **/
 	
+{	
 	// Debounce loop. We need to receive a minimum number of
 	// samples to determine that the button is actually
 	// pressed.
@@ -111,7 +114,7 @@ boolean debounceLoop(int buttonPin, int buttonNr) {
 			return true;
 		}
 	}
-return false;
+	return false;
 }
 
 void loop()
