@@ -1,0 +1,29 @@
+BOKS
+====
+
+Boks firmware, Python interface, and OpenSesame plug-in
+Copyright (2012) Sebastiaan Mathôt
+http://boks.cogsci.nl
+
+ABOUT
+=====
+Boks is an open-source response boks, based on the Arduino. This repository
+(will) contain(s) the Arduino firmware, Python interface, and OpenSesame 
+plug-in.
+
+TESTING
+=======
+To test the boks, load the firmware onto the Arduino using the Arduio IDE.
+Connect the buttons to pins 2, 4, 7, and 8 of the Arduino. Test the Arduino
+by running the test script and passing the port number to which the Arduino
+is connected as parameter. For example:
+
+> testboks /dev/ttyACM0
+> testboks COM3
+
+FILES
+=====
+COPYING							License information
+arduino/boks/boks.ino			Arduino firmware
+python/bokstest					Python test script
+

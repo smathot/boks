@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+
+# This file is part of boks.
+# 
+# boks is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# boks is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with boks. If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+import serial
+import struct
+
+if len(sys.argv) < 2:
+	print 'Usage: bokstest [port]'
+	sys.exit(1)
+	
+port = sys.argv[1]
+s = serial.Serial(port, baudrate=115200, timeout=1)
+print 'Connected to Arduino'
+print 'Waiting for handshake ...'
+
+while True:
+	s.write(chr(1))	
+	v = s.read(5)
+	if v == '':
+		continue
+	print 'Arduino says:', v
+	v = s.read(16)
+	print 'Arduino says:', v
+	break
+
+print 'Waiting for button press ...'
+s.write(chr(2))
+while True:
+	v = s.read(1)
+	if v != '':
+		print 'Arduino says:', ord(v)
+		break
+		
+print 'Getting timestamp for button press ...'
+s.write(chr(6))
+v = s.read(4)
+if v != '':
+	t = struct.unpack('I', v)[0] / 1000			
+	print 'Arduino says:', t
+	
+print 'Waiting for button release ...'
+s.write(chr(3))
+while True:
+	v = s.read(1)
+	if v != '':
+		print 'Arduino says:', ord(v)
+		break
+		
+print 'Getting timestamp for button release ...'
+s.write(chr(6))
+v = s.read(4)
+if v != '':
+	t = struct.unpack('I', v)[0] / 1000			
+	print 'Arduino says:', t
