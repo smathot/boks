@@ -18,8 +18,8 @@ Connect the buttons to pins 2, 4, 7, and 8 of the Arduino. Test the Arduino
 by running the test script and passing the port number to which the Arduino
 is connected as parameter. For example:
 
-> testboks /dev/ttyACM0
-> testboks COM3
+> unittest /dev/ttyACM0
+> unittest COM3
 
 FILES
 =====
