@@ -18,7 +18,7 @@
 // The version and model are used to identify the box to the client. The
 // version must be a 5 char string. The model musy be a 16 char string,
 // optionally right-padded with whitespace for short mode names.
-#define VERSION 			"0.1.2"
+#define VERSION 			"0.1.3"
 #define MODEL 				"dev.boks        "
 
 // The respective pins on Arduino to which the buttons are connected
@@ -35,19 +35,28 @@
 #define BAUD_RATE 			115200
 
 // Signals for communicating with the library
-#define CMD_IDENTIFY 		1
-#define CMD_WAIT_PRESS 		2
-#define CMD_WAIT_RELEASE 	3
-#define CMD_GET_STATE 		4
-#define CMD_GET_TIME_NOW 	5
-#define CMD_GET_TIME_EVENT 6
-#define CMD_SET_BUTTONS 	7
-#define CMD_SET_TIMEOUT 	8
+#define CMD_RESET			1
+#define CMD_IDENTIFY 		2
+#define CMD_WAIT_PRESS 		3
+#define CMD_WAIT_RELEASE 	4
+#define CMD_WAIT_SLEEP		5
+#define CMD_BUTTON_STATE	6
+#define CMD_SET_T1			7
+#define CMD_SET_T2			8
+#define CMD_SET_TIMEOUT		9
+#define CMD_SET_BUTTONS		10
+#define CMD_GET_T1			11
+#define CMD_GET_T2			12
+#define CMD_GET_TD			13
+#define CMD_GET_TIME		14
+#define CMD_GET_TIMEOUT		15
+#define	CMD_GET_BUTTONS		16
 
 // In order to be able to send the timeStamp, it needs to be mapped onto an array
 union timeStamp {
    unsigned long asLong;
    unsigned char asArray[4];
+   char asChar[4];
 };
 
 // Define variables
@@ -63,8 +72,16 @@ int state3;
 int pState3;
 int state4;
 int pState4;
-int count;
+int i;
+char c;
+byte button1;
+byte button2;
+byte button3;
+byte button4;
+timeStamp t1;
+timeStamp t2;
 timeStamp ts;
+timeStamp timeout;
 
 void setup()
 
@@ -81,7 +98,8 @@ void setup()
 	pinMode(BUTTON_PIN_3, INPUT);
 	digitalWrite(BUTTON_PIN_3, HIGH);
 	pinMode(BUTTON_PIN_4, INPUT);
-	digitalWrite(BUTTON_PIN_4, HIGH);    
+	digitalWrite(BUTTON_PIN_4, HIGH);  
+	reset();
 }
 
 boolean debounceLoop(int buttonPin, int buttonNr)
@@ -100,21 +118,34 @@ boolean debounceLoop(int buttonPin, int buttonNr)
 	 **/
 	
 {	
-	// Debounce loop. We need to receive a minimum number of
-	// samples to determine that the button is actually
-	// pressed.
-	count = 0;
+	i = 0;
 	while (true) {
 		state = digitalRead(buttonPin);
 		if (state != toState) {
 			return false; // Debounce failed							
 		}						
-		if (count++ == DEBOUNCE_COUNT) {
+		if (i++ == DEBOUNCE_COUNT) {
 			Serial.write(buttonNr);
 			return true;
 		}
 	}
 	return false;
+}
+
+void reset()
+
+	/*
+	 * Reset Arduino to initial state
+	 **/
+
+{
+	timeout.asLong = 0;
+	t1.asLong = 0;
+	t2.asLong = 0;
+	button1 = 1;
+	button2 = 0;
+	button3 = 1;
+	button4 = 0;	
 }
 
 void loop()
@@ -127,88 +158,112 @@ void loop()
 	cmd = Serial.read();
 	if (cmd > 0) {
 		
-		if (cmd == CMD_WAIT_PRESS || cmd == CMD_WAIT_RELEASE) {						
+		if (cmd == CMD_RESET) {
+			reset();
 			
-			// If the boks gets a command to wait for a press or a release it
-			// simply waits until a key is pressed or released and sends a signal
-			// byte to the requester.
+		} else if (cmd == CMD_IDENTIFY) {			
+			Serial.print(VERSION);
+			Serial.print(MODEL);
 			
-			// The transition of interest depends on whether we are interested
-			// in a press or a release.
+		} else if (cmd == CMD_WAIT_PRESS || cmd == CMD_WAIT_RELEASE) {												
 			if (cmd == CMD_WAIT_PRESS) {
 				fromState = HIGH;
 				toState = LOW;				
 			} else {
 				fromState = LOW;
 				toState = HIGH;
-			}
-			
-			pState1 = -1;
-			
-			// Poll for button presses/ releases until an event has been
-			// detected.
+			}			
+			pState1 = -1;	
+			pState2 = -1;
+			pState3 = -1;
+			pState4 = -1;
 			while (true) {
-				ts.asLong = micros();
+				t2.asLong = micros();				
+				if (timeout.asLong > 0 && t2.asLong - t1.asLong >=
+					timeout.asLong) {
+					Serial.write(255);
+					break;
+				}				
 				state1 = digitalRead(BUTTON_PIN_1);				
 				state2 = digitalRead(BUTTON_PIN_2);
 				state3 = digitalRead(BUTTON_PIN_3);
 				state4 = digitalRead(BUTTON_PIN_4);
-				if (pState1 == fromState && state1 == toState) {
-					if (debounceLoop(BUTTON_PIN_1, 1)) {
-						break;
-					}
-				}
-				if (pState2 == fromState && state2 == toState) {
-					if (debounceLoop(BUTTON_PIN_2, 2)) {
-						break;
-					}
-				}
-				if (pState3 == fromState && state3 == toState) {
-					if (debounceLoop(BUTTON_PIN_3, 3)) {
-						break;
-					}
-				}
-				if (pState4 == fromState && state4 == toState) {
-					if (debounceLoop(BUTTON_PIN_4, 4)) {
-						break;
-					}
-				}				
+				if (button1 && pState1 == fromState && state1 == toState && 
+					debounceLoop(BUTTON_PIN_1, 1)) break;
+				if (button2 && pState2 == fromState && state2 == toState && 
+					debounceLoop(BUTTON_PIN_2, 2)) break;
+				if (button3 && pState3 == fromState && state3 == toState && 
+					debounceLoop(BUTTON_PIN_3, 3)) break;
+				if (button4 && pState4 == fromState && state4 == toState && 
+					debounceLoop(BUTTON_PIN_4, 4)) break;
 				pState1 = state1;
 				pState2 = state2;
 				pState3 = state3;
 				pState4 = state4;
 			}
 			
-		} else if (cmd == CMD_GET_STATE) {	
-			
-			// If the boks gets a command to return the button state, it
-			// immediately responds by sending a byte where the active buttons
-			// are 1, and the inactive buttons are 0.		
-			
-			Serial.write(
-				!digitalRead(BUTTON_PIN_1) |
-				!digitalRead(BUTTON_PIN_2) << 1 |
-				!digitalRead(BUTTON_PIN_3) << 2 |
-				!digitalRead(BUTTON_PIN_4) << 3				
-			);		
-			
-		} else if (cmd == CMD_GET_TIME_NOW || cmd == CMD_GET_TIME_EVENT) {
-			
-			// If the boks gets a command to return the time, it optionally gets
-			// the current time (if CMD_GET_TIME_NOW) and then sends it as an
-			// unsigned long to the requester.
-			
-			if (cmd == CMD_GET_TIME_NOW) {
-				ts.asLong = micros();
+		} else if (cmd == CMD_WAIT_SLEEP) {
+			// Long delays cannot be handled on microsecond resolution
+			if (timeout.asLong > 16383) {
+				delay(timeout.asLong/1000);
+			} else {
+				delayMicroseconds(timeout.asLong);	
 			}
+			
+		} else if (cmd == CMD_BUTTON_STATE) {	
+			Serial.write(
+				~digitalRead(BUTTON_PIN_1) |
+				~digitalRead(BUTTON_PIN_2) << 1 |
+				~digitalRead(BUTTON_PIN_3) << 2 |
+				~digitalRead(BUTTON_PIN_4) << 3				
+			);
+			
+		} else if (cmd == CMD_SET_T1) {
+			t1.asLong = micros();
+			
+		} else if (cmd == CMD_SET_T2) {
+			t2.asLong = micros();
+		
+		} else if (cmd == CMD_SET_TIMEOUT) {
+			Serial.readBytes(timeout.asChar, 4);
+		
+		} else if (cmd == CMD_SET_BUTTONS) {
+			Serial.readBytes(&c, 1);
+			if (c == 0) {
+				// Do not allow the user to turn off all buttons!
+				button1 = 1;
+				button2 = 1;
+				button3 = 1;
+				button4 = 1;
+			} else {
+ 				button1 = c & 1;
+ 				button2 = (c >> 1) & 1;
+ 				button3 = (c >> 2) & 1;
+ 				button4 = (c >> 3) & 1;
+			}
+			
+		} else if (cmd == CMD_GET_T1) {
+			Serial.write(t1.asArray, 4);
+			
+		} else if (cmd == CMD_GET_T2) {			
+			Serial.write(t2.asArray, 4);
+			
+		} else if (cmd == CMD_GET_TD) {			
+			ts.asLong = t2.asLong - t1.asLong;
 			Serial.write(ts.asArray, 4);
 			
-		} else if (cmd == CMD_IDENTIFY) {
-			
-			// If the boks gets a command to identify itself, it sends a 
-			
-			Serial.print(VERSION);
-			Serial.print(MODEL);
+		} else if (cmd == CMD_GET_TIME) {			
+			ts.asLong = micros();
+			Serial.write(ts.asArray, 4);
+		
+		} else if (cmd == CMD_GET_TIMEOUT) {
+			Serial.write(timeout.asArray, 4);
+		
+		} else if (cmd == CMD_GET_BUTTONS) {
+			Serial.write(button1 +
+				(button2 << 1) |
+				(button3 << 2) |
+				(button4 << 3));
 		}
 	}
 }
