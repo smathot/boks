@@ -19,6 +19,23 @@ import sys
 import serial
 import struct
 
+CMD_RESET			= chr(1)
+CMD_IDENTIFY 		= chr(2)
+CMD_WAIT_PRESS 		= chr(3)
+CMD_WAIT_RELEASE 	= chr(4)
+CMD_WAIT_SLEEP		= chr(5)
+CMD_BUTTON_STATE	= chr(6)
+CMD_SET_T1			= chr(7)
+CMD_SET_T2			= chr(8)
+CMD_SET_TIMEOUT		= chr(9)
+CMD_SET_BUTTONS		= chr(10)
+CMD_GET_T1			= chr(11)
+CMD_GET_T2			= chr(12)
+CMD_GET_TD			= chr(13)
+CMD_GET_TIME		= chr(14)
+CMD_GET_TIMEOUT		= chr(15)
+CMD_GET_BUTTONS		= chr(16)
+
 if len(sys.argv) < 2:
 	print 'Usage: bokstest [port]'
 	sys.exit(1)
@@ -29,7 +46,7 @@ print 'Connected to Arduino'
 print 'Waiting for handshake ...'
 
 while True:
-	s.write(chr(1))	
+	s.write(CMD_IDENTIFY)	
 	v = s.read(5)
 	if v == '':
 		continue
@@ -37,9 +54,38 @@ while True:
 	v = s.read(16)
 	print 'Arduino says:', v
 	break
+	
+print 'Getting active buttons:'
+s.write(CMD_GET_BUTTONS)
+v = s.read(1)
+print 'Arduino says:', bin(ord(v))	
+	
+print 'Disabling all but button 2'
+s.write(CMD_SET_BUTTONS)
+print s.write(chr(2))
+
+print 'Getting active buttons:'
+for i in range(1):
+	s.write(CMD_GET_BUTTONS)
+	v = s.read(1)
+	print 'Arduino says:', bin(ord(v))
+
+print 'Setting 2000ms timeout'
+s.write(CMD_SET_TIMEOUT)
+t = struct.pack('I', 2000*1000)
+s.write(t)
+
+print 'Getting timeout'
+s.write(CMD_GET_TIMEOUT)
+v = s.read(4)
+if v != '':
+	t = struct.unpack('I', v)[0] / 1000			
+	print 'Arduino says:', t	
+print 'Setting T1'
+s.write(CMD_SET_T1)
 
 print 'Waiting for button press ...'
-s.write(chr(2))
+s.write(CMD_WAIT_PRESS)
 while True:
 	v = s.read(1)
 	if v != '':
@@ -47,14 +93,29 @@ while True:
 		break
 		
 print 'Getting timestamp for button press ...'
-s.write(chr(6))
+s.write(CMD_GET_T2)
 v = s.read(4)
 if v != '':
 	t = struct.unpack('I', v)[0] / 1000			
 	print 'Arduino says:', t
 	
+print 'Getting TD for button press ...'
+s.write(CMD_GET_TD)
+v = s.read(4)
+if v != '':
+	t = struct.unpack('I', v)[0] / 1000			
+	print 'Arduino says:', t
+	
+print 'Getting button state'
+s.write(CMD_BUTTON_STATE)
+v = s.read(1)
+print 'Arduino says:', bin(ord(v))
+	
+print 'Setting T1'
+s.write(CMD_SET_T1)
+	
 print 'Waiting for button release ...'
-s.write(chr(3))
+s.write(CMD_WAIT_RELEASE)
 while True:
 	v = s.read(1)
 	if v != '':
@@ -62,8 +123,9 @@ while True:
 		break
 		
 print 'Getting timestamp for button release ...'
-s.write(chr(6))
+s.write(CMD_GET_T2)
 v = s.read(4)
 if v != '':
 	t = struct.unpack('I', v)[0] / 1000			
 	print 'Arduino says:', t
+
