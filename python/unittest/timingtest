@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+# This file is part of boks.
+# 
+# boks is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# boks is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with boks. If not, see <http://www.gnu.org/licenses/>. 
+
+import libboks
+import time
+import sys
+import random
+import numpy as np
+from matplotlib import pyplot as plt
+
+N = 50
+minDelay = 1
+maxDelay = 500
+
+print '\nStarting Boks test suite\n'
+
+b = libboks.libboks()
+
+lD = []
+lTd = []
+for i in range(N):
+	sys.stdout.write('.')
+	sys.stdout.flush()
+	d = random.randint(minDelay, maxDelay)
+	b.dev.write(libboks.CMD_SET_T1)
+	time.sleep(.001*d)
+	b.dev.write(libboks.CMD_SET_T2)
+	b.dev.write(libboks.CMD_GET_TD)
+	td = .001 * b.read_ulong()
+	lD.append(d)
+	lTd.append(td)
+	
+lD = np.array(lD)
+lTd = np.array(lTd)
+d = lTd - lD
+
+print '%d runs' % N
+print 'actual-intended = %fms (%f)' % (d.mean(), d.std())
+d = np.abs(d)
+print 'abs(actual-intended) = %fms (%f)' % (d.mean(), d.std())
+	
+plt.plot(lD, d, '.')
+plt.show()
+
+b.close()
