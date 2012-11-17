@@ -18,7 +18,7 @@
 // The version and model are used to identify the box to the client. The
 // version must be a 5 char string. The model musy be a 16 char string,
 // optionally right-padded with whitespace for short mode names.
-#define VERSION 			"0.1.3"
+#define VERSION 			"0.1.4"
 #define MODEL 				"dev.boks        "
 
 // The respective pins on Arduino to which the buttons are connected
@@ -143,9 +143,9 @@ void reset()
 	t1.asLong = 0;
 	t2.asLong = 0;
 	button1 = 1;
-	button2 = 0;
+	button2 = 1;
 	button3 = 1;
-	button4 = 0;	
+	button4 = 1;	
 }
 
 void loop()
@@ -212,10 +212,10 @@ void loop()
 			
 		} else if (cmd == CMD_BUTTON_STATE) {	
 			Serial.write(
-				~digitalRead(BUTTON_PIN_1) |
-				~digitalRead(BUTTON_PIN_2) << 1 |
-				~digitalRead(BUTTON_PIN_3) << 2 |
-				~digitalRead(BUTTON_PIN_4) << 3				
+				!digitalRead(BUTTON_PIN_1) |
+				!digitalRead(BUTTON_PIN_2) << 1 |
+				!digitalRead(BUTTON_PIN_3) << 2 |
+				!digitalRead(BUTTON_PIN_4) << 3				
 			);
 			
 		} else if (cmd == CMD_SET_T1) {
