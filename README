@@ -3,7 +3,7 @@ BOKS
 
 Boks firmware, Python interface, and OpenSesame plug-in
 Copyright (2012) Sebastiaan Mathôt
-http://boks.cogsci.nl
+http://www.cogsci.nl/boks
 
 ABOUT
 =====
@@ -25,5 +25,8 @@ FILES
 =====
 COPYING							License information
 arduino/boks/boks.ino			Arduino firmware
-python/bokstest					Python test script
+python/boks/libboks.py			Python library for Boks
+python/unittest/libboks.py		-> python/boks/libboks.py
+python/unittest/timingtest		Python script to benchmark Boks timing
+python/unittest/unittest			Python script to test basic Boks functionality
 
