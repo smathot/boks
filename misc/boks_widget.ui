@@ -182,52 +182,103 @@ color: rgb(255, 255, 255);</string>
             <property name="margin">
              <number>4</number>
             </property>
-            <item row="1" column="1">
-             <widget class="QPushButton" name="button_2">
-              <property name="text">
-               <string>2</string>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="button_3">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
-              <property name="checkable">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+              <property name="flat">
                <bool>true</bool>
               </property>
              </widget>
             </item>
-            <item row="1" column="3">
-             <widget class="QPushButton" name="button_4">
+            <item row="0" column="0" colspan="5">
+             <widget class="QLabel" name="label_boks_test">
               <property name="text">
-               <string>4</string>
+               <string>Press the buttons on your boks and see if the buttons below respond. Please stop the test before running the experiment.</string>
               </property>
-              <property name="checkable">
+              <property name="wordWrap">
                <bool>true</bool>
               </property>
              </widget>
             </item>
             <item row="1" column="0">
              <widget class="QPushButton" name="button_1">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
-               <string>1</string>
+               <string/>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
               </property>
               <property name="checkable">
+               <bool>false</bool>
+              </property>
+              <property name="flat">
                <bool>true</bool>
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
-             <widget class="QPushButton" name="button_3">
-              <property name="text">
-               <string>3</string>
+            <item row="1" column="1">
+             <widget class="QPushButton" name="button_2">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
-              <property name="checkable">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+              <property name="flat">
                <bool>true</bool>
               </property>
              </widget>
             </item>
-            <item row="0" column="0" colspan="4">
-             <widget class="QLabel" name="label_boks_test">
-              <property name="text">
-               <string>Press the buttons on your boks and see if the buttons below respond. Please stop the test before running the experiment.</string>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="button_4">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
-              <property name="wordWrap">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+              <property name="flat">
                <bool>true</bool>
               </property>
              </widget>

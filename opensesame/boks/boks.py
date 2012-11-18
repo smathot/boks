@@ -186,7 +186,19 @@ class qtboks(boks, qtplugin.qtplugin):
 			self.experiment.resource("boks_large.png")))
 		self.boks_widget.ui.label_boks.setText(unicode( \
 			self.boks_widget.ui.label_boks.text()) % self.version)
-		
+			
+		# Load icons for buttons
+		self.icons = {}
+		for i in range(1,5):			
+			icon = QtGui.QIcon()
+			icon.addPixmap(QtGui.QPixmap(os.path.join( \
+				os.path.dirname(__file__), 'icons', 'active%d.png' % i)),
+				QtGui.QIcon.Normal)
+			icon.addPixmap(QtGui.QPixmap(os.path.join( \
+				os.path.dirname(__file__), 'icons', 'inactive%d.png' % i)),
+				QtGui.QIcon.Disabled)				
+			getattr(self.boks_widget.ui, 'button_%d' % i).setIcon(icon)
+							
 		self.edit_vbox.addWidget(self.boks_widget)
 		self.edit_vbox.addStretch()		
 		self.boks_widget.ui.widget_test.hide()
@@ -270,21 +282,21 @@ class boks_test_thread(QtCore.QThread):
 			self.boks = None
 		self.boks_item.boks_widget.ui.edit_firmware_version.setText( \
 			firmware_version)
-		self.boks_item.boks_widget.ui.edit_model.setText(model)					
+		self.boks_item.boks_widget.ui.edit_model.setText(model)							
 		
 	def run(self):
 		
 		"""Continuously poll the button state and toggle the QPushButtons"""		
-		
+				
 		while self.active and self.boks != None:
 			pressed_buttons = self.boks.get_button_state()
-			self.boks_item.boks_widget.ui.button_1.setChecked(1 in \
+			self.boks_item.boks_widget.ui.button_1.setEnabled(1 in \
 				pressed_buttons)
-			self.boks_item.boks_widget.ui.button_2.setChecked(2 in \
+			self.boks_item.boks_widget.ui.button_2.setEnabled(2 in \
 				pressed_buttons)
-			self.boks_item.boks_widget.ui.button_3.setChecked(3 in \
+			self.boks_item.boks_widget.ui.button_3.setEnabled(3 in \
 				pressed_buttons)
-			self.boks_item.boks_widget.ui.button_4.setChecked(4 in \
+			self.boks_item.boks_widget.ui.button_4.setEnabled(4 in \
 				pressed_buttons)			
 		if self.boks != None:
 			self.boks.close()
