@@ -106,7 +106,7 @@ class libboks:
 		else:
 			self.port = port
 		self.msg('port: %s' % self.port)
-		self.dev = serial.Serial(self.port, baudrate=baudrate, timeout=5)		
+		self.dev = serial.Serial(self.port, baudrate=baudrate)		
 			
 		# Set up link
 		self.identify()								
@@ -250,6 +250,7 @@ class libboks:
 		check whether we are dealing with a real boks
 		"""
 		
+		self.dev.timeout = 2
 		while True:		
 			self.dev.write(CMD_IDENTIFY)
 			s = self.dev.read(firmware_version_length)
@@ -259,7 +260,8 @@ class libboks:
 		self.msg('firmware version: %s' % s)
 		s = self.dev.read(model_length).strip()
 		self.model = s
-		self.msg('model: %s' % s)
+		self.msg('model: %s' % s)		
+		self.dev.timeout = None
 		
 	def info(self):
 		
