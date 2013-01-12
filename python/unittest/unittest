@@ -1,36 +1,57 @@
 #!/usr/bin/env python
 
 # This file is part of boks.
-# 
+#
 # boks is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # boks is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with boks. If not, see <http://www.gnu.org/licenses/>.
 
 from libboks import libboks
+from time import time
 
 print '\nStarting Boks test suite\n'
 
 b = libboks()
 
 print 'Time: %s' % b.time()
-b.set_buttons( [3, 4] )
+b.set_buttons( [1, 2, 3, 4] )
 b.set_timeout(2000)
 
 print 'Buttons: %s' % b.get_buttons()
 print 'Timeout: %s' % b.get_timeout()
 
-print 'Button state: %s' % b.get_button_state()
-print 'Button press: %s, %s' % b.get_button_press()
-print 'Button release: %s, %s' % b.get_button_release()
+print 'Waiting for button press'
+t1 = .001 * time()
+button, t2 = b.get_button_press()
+print 'Received button %s press in %.2f ms' % (button, t2-t1)
+
+print 'Waiting for button release'
+t1 = .001 * time()
+button, t2 = b.get_button_release()
+print 'Received button %s release in %.2f ms' % (button, t2-t1)
+
+print 'Enabling continuous mode'
+b.set_continuous(True)
+
+print 'Waiting for button press'
+t1 = .001 * time()
+button, t2 = b.get_button_press()
+print 'Received button %s press in %.2f ms' % (button, t2-t1)
+
+
+print 'Waiting for button release'
+t1 = .001 * time()
+button, t2 = b.get_button_release()
+print 'Received button %s release in %.2f ms' % (button, t2-t1)
 
 print 'Time: %s' % b.time()
 
