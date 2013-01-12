@@ -1,16 +1,16 @@
 /**
  * This file is part of boks.
- * 
+ *
  * boks is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * boks is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with boks. If not, see <http://www.gnu.org/licenses/>.
  **/
@@ -18,7 +18,7 @@
 // The version and model are used to identify the box to the client. The
 // version must be a 5 char string. The model musy be a 16 char string,
 // optionally right-padded with whitespace for short mode names.
-#define VERSION 			"0.1.4"
+#define VERSION 			"0.1.5"
 #define MODEL 				"dev.boks        "
 
 // The respective pins on Arduino to which the buttons are connected
@@ -45,12 +45,13 @@
 #define CMD_SET_T2			8
 #define CMD_SET_TIMEOUT		9
 #define CMD_SET_BUTTONS		10
-#define CMD_GET_T1			11
-#define CMD_GET_T2			12
-#define CMD_GET_TD			13
-#define CMD_GET_TIME		14
-#define CMD_GET_TIMEOUT		15
-#define	CMD_GET_BUTTONS		16
+#define CMD_SET_CONTINUOUS	11
+#define CMD_GET_T1			12
+#define CMD_GET_T2			13
+#define CMD_GET_TD			14
+#define CMD_GET_TIME			15
+#define CMD_GET_TIMEOUT		16
+#define	CMD_GET_BUTTONS		17
 
 // In order to be able to send the timeStamp, it needs to be mapped onto an array
 union timeStamp {
@@ -73,6 +74,7 @@ int pState3;
 int state4;
 int pState4;
 int i;
+char continuous;
 char c;
 byte button1;
 byte button2;
@@ -85,7 +87,7 @@ timeStamp timeout;
 
 void setup()
 
-	/** 
+	/**
 	 * Setup the buttons as input
 	 **/
 
@@ -94,47 +96,17 @@ void setup()
 	pinMode(BUTTON_PIN_1, INPUT);
 	digitalWrite(BUTTON_PIN_1, HIGH);
 	pinMode(BUTTON_PIN_2, INPUT);
-	digitalWrite(BUTTON_PIN_2, HIGH);  
+	digitalWrite(BUTTON_PIN_2, HIGH);
 	pinMode(BUTTON_PIN_3, INPUT);
 	digitalWrite(BUTTON_PIN_3, HIGH);
 	pinMode(BUTTON_PIN_4, INPUT);
-	digitalWrite(BUTTON_PIN_4, HIGH);  
+	digitalWrite(BUTTON_PIN_4, HIGH);
 	reset();
-}
-
-boolean debounceLoop(int buttonPin, int buttonNr)
-	
-	/**
-	 * Repeatedly samples a given pin, and sends a buttonNr if sufficient
-	 * consecutive samples have been collected.
-	 * 
-	 * Arguments:
-	 * int buttonPin	-- the pin to samples
-	 * int buttonNr 	-- the nr of the button to send in case a signal has been
-	 * 					   detected
-	 * 
-	 * Returns:
-	 * true or false, depending on whether a sample has been detected
-	 **/
-	
-{	
-	i = 0;
-	while (true) {
-		state = digitalRead(buttonPin);
-		if (state != toState) {
-			return false; // Debounce failed							
-		}						
-		if (i++ == DEBOUNCE_COUNT) {
-			Serial.write(buttonNr);
-			return true;
-		}
-	}
-	return false;
 }
 
 void reset()
 
-	/*
+	/**
 	 * Reset Arduino to initial state
 	 **/
 
@@ -145,7 +117,8 @@ void reset()
 	button1 = 1;
 	button2 = 1;
 	button3 = 1;
-	button4 = 1;	
+	button4 = 1;
+	continuous = 0;
 }
 
 void loop()
@@ -157,76 +130,89 @@ void loop()
 {
 	cmd = Serial.read();
 	if (cmd > 0) {
-		
+
 		if (cmd == CMD_RESET) {
 			reset();
-			
-		} else if (cmd == CMD_IDENTIFY) {			
+
+		} else if (cmd == CMD_IDENTIFY) {
 			Serial.print(VERSION);
 			Serial.print(MODEL);
-			
-		} else if (cmd == CMD_WAIT_PRESS || cmd == CMD_WAIT_RELEASE) {												
+
+		} else if (cmd == CMD_WAIT_PRESS || cmd == CMD_WAIT_RELEASE) {
 			if (cmd == CMD_WAIT_PRESS) {
 				fromState = HIGH;
-				toState = LOW;				
+				toState = LOW;
 			} else {
 				fromState = LOW;
 				toState = HIGH;
-			}			
-			pState1 = -1;	
+			}
+			pState1 = -1;
 			pState2 = -1;
 			pState3 = -1;
 			pState4 = -1;
 			while (true) {
-				t2.asLong = micros();				
+				t2.asLong = micros();
 				if (timeout.asLong > 0 && t2.asLong - t1.asLong >=
 					timeout.asLong) {
 					Serial.write(255);
 					break;
-				}				
-				state1 = digitalRead(BUTTON_PIN_1);				
+				}
+				state1 = digitalRead(BUTTON_PIN_1);
 				state2 = digitalRead(BUTTON_PIN_2);
 				state3 = digitalRead(BUTTON_PIN_3);
 				state4 = digitalRead(BUTTON_PIN_4);
-				if (button1 && pState1 == fromState && state1 == toState && 
-					debounceLoop(BUTTON_PIN_1, 1)) break;
-				if (button2 && pState2 == fromState && state2 == toState && 
-					debounceLoop(BUTTON_PIN_2, 2)) break;
-				if (button3 && pState3 == fromState && state3 == toState && 
-					debounceLoop(BUTTON_PIN_3, 3)) break;
-				if (button4 && pState4 == fromState && state4 == toState && 
-					debounceLoop(BUTTON_PIN_4, 4)) break;
+
+				if (button1 && (continuous || pState1 == fromState)
+					&& state1 == toState) {
+					Serial.write(1);
+					break;
+				}
+				if (button2 && (continuous || pState2 == fromState)
+					&& state2 == toState) {
+					Serial.write(2);
+					break;
+				}
+				if (button3 && (continuous || pState3 == fromState)
+					&& state3 == toState) {
+					Serial.write(3);
+					break;
+				}
+				if (button4 && (continuous || pState4 == fromState)
+					&& state4 == toState) {
+					Serial.write(4);
+					break;
+				}
 				pState1 = state1;
 				pState2 = state2;
 				pState3 = state3;
 				pState4 = state4;
 			}
-			
+
 		} else if (cmd == CMD_WAIT_SLEEP) {
 			// Long delays cannot be handled on microsecond resolution
 			if (timeout.asLong > 16383) {
 				delay(timeout.asLong/1000);
 			} else {
-				delayMicroseconds(timeout.asLong);	
+				delayMicroseconds(timeout.asLong);
 			}
-			
-		} else if (cmd == CMD_BUTTON_STATE) {	
+
+		} else if (cmd == CMD_BUTTON_STATE) {
 			Serial.write(
 				!digitalRead(BUTTON_PIN_1) |
 				!digitalRead(BUTTON_PIN_2) << 1 |
 				!digitalRead(BUTTON_PIN_3) << 2 |
-				!digitalRead(BUTTON_PIN_4) << 3				
+				!digitalRead(BUTTON_PIN_4) << 3
 			);
-			
+
 		} else if (cmd == CMD_SET_T1) {
 			t1.asLong = micros();
-			
+
 		} else if (cmd == CMD_SET_T2) {
 			t2.asLong = micros();
-		
+
 		} else if (cmd == CMD_SET_TIMEOUT) {
 			Serial.readBytes(timeout.asChar, 4);
-		
+
 		} else if (cmd == CMD_SET_BUTTONS) {
 			Serial.readBytes(&c, 1);
 			if (c == 0) {
@@ -241,24 +227,26 @@ void loop()
  				button3 = (c >> 2) & 1;
  				button4 = (c >> 3) & 1;
 			}
-			
+		} else if (cmd == CMD_SET_CONTINUOUS) {
+			Serial.readBytes(&continuous, 1);
+
 		} else if (cmd == CMD_GET_T1) {
 			Serial.write(t1.asArray, 4);
-			
-		} else if (cmd == CMD_GET_T2) {			
+
+		} else if (cmd == CMD_GET_T2) {
 			Serial.write(t2.asArray, 4);
-			
-		} else if (cmd == CMD_GET_TD) {			
+
+		} else if (cmd == CMD_GET_TD) {
 			ts.asLong = t2.asLong - t1.asLong;
 			Serial.write(ts.asArray, 4);
-			
-		} else if (cmd == CMD_GET_TIME) {			
+
+		} else if (cmd == CMD_GET_TIME) {
 			ts.asLong = micros();
 			Serial.write(ts.asArray, 4);
-		
+
 		} else if (cmd == CMD_GET_TIMEOUT) {
 			Serial.write(timeout.asArray, 4);
-		
+
 		} else if (cmd == CMD_GET_BUTTONS) {
 			Serial.write(button1 +
 				(button2 << 1) |
