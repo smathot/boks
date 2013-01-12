@@ -20,6 +20,7 @@ along with Boks.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import serial
 import struct
+import time
 
 # The command byes that are used to communicate with the Arduino
 CMD_RESET			= chr(1)
@@ -32,12 +33,13 @@ CMD_SET_T1			= chr(7)
 CMD_SET_T2			= chr(8)
 CMD_SET_TIMEOUT		= chr(9)
 CMD_SET_BUTTONS		= chr(10)
-CMD_GET_T1			= chr(11)
-CMD_GET_T2			= chr(12)
-CMD_GET_TD			= chr(13)
-CMD_GET_TIME			= chr(14)
-CMD_GET_TIMEOUT		= chr(15)
-CMD_GET_BUTTONS		= chr(16)
+CMD_SET_CONTINUOUS	= chr(11)
+CMD_GET_T1			= chr(12)
+CMD_GET_T2			= chr(13)
+CMD_GET_TD			= chr(14)
+CMD_GET_TIME			= chr(15)
+CMD_GET_TIMEOUT		= chr(16)
+CMD_GET_BUTTONS		= chr(17)
 
 # Various parameters
 baudrate = 115200
@@ -135,6 +137,7 @@ class libboks:
 		# Get the response time and use this to determine the end time
 		self.dev.write(CMD_GET_TD)
 		time = start_time + .001 * self.read_ulong()
+		#time = .001 * self.read_ulong()
 		# Return
 		if button == button_timeout:
 			return None, time
@@ -348,6 +351,28 @@ class libboks:
 		self.dev.write(CMD_SET_BUTTONS)
 		self.dev.write(chr(v))
 
+	def set_continuous(self, continuous=True):
+
+		"""
+		Determines whether get_button_press() and get_button_release() are
+		triggered only by signal changes (discontinuous) or also by continuous
+		signals. The Boks is by default in discontinuous mode, which is generally
+		what you want. For example, in continuous mode, the get_button_release()
+		will respond right away if any of the buttons is not pressed, whereas you
+		are generally interested only in buttons that go from being pressed to
+		not being pressed.
+
+		Keyword arguments:
+		continous		--- True for continuous, False for discontinuous
+							(default=True)
+		"""
+
+		self.dev.write(CMD_SET_CONTINUOUS)
+		if continuous:
+			self.dev.write(chr(1))
+		else:
+			self.dev.write(chr(0))
+
 	def set_timeout(self, timeout):
 
 		"""
@@ -382,8 +407,7 @@ class libboks:
 		A timestamp in milliseconds
 		"""
 
-		self.dev.write(CMD_GET_TIME)
-		return .001 * self.read_ulong()
+		return .001 * time.time()
 
 	def write_ulong(self, l):
 
