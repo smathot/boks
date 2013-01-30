@@ -28,7 +28,7 @@ CMD_IDENTIFY 		= chr(2)
 CMD_WAIT_PRESS 		= chr(3)
 CMD_WAIT_RELEASE 	= chr(4)
 CMD_WAIT_SLEEP		= chr(5)
-CMD_BUTTON_STATE		= chr(6)
+CMD_BUTTON_STATE	= chr(6)
 CMD_SET_T1			= chr(7)
 CMD_SET_T2			= chr(8)
 CMD_SET_TIMEOUT		= chr(9)
@@ -37,14 +37,16 @@ CMD_SET_CONTINUOUS	= chr(11)
 CMD_GET_T1			= chr(12)
 CMD_GET_T2			= chr(13)
 CMD_GET_TD			= chr(14)
-CMD_GET_TIME			= chr(15)
+CMD_GET_TIME		= chr(15)
 CMD_GET_TIMEOUT		= chr(16)
 CMD_GET_BUTTONS		= chr(17)
+CMD_LED_ON			= chr(18)
+CMD_LED_OFF			= chr(19)
 
 # Various parameters
 baudrate = 115200
 button_timeout = 255
-all_buttons = [1,2,3,4]
+all_buttons = [1,2,3,4] # Except the photodiode, which is button 8
 firmware_version_length = 5
 model_length = 16
 version = 0.10
@@ -68,16 +70,16 @@ class libboks:
 		Constructor
 
 		Keyword arguments:
-		port	 			--- the port to which the device is connected, None for
+		port	 		-- 	the port to which the device is connected, None for
 							autodetect, or 'dummy' to use the keyboard as a
 							dummy-boks (default=None)
-		experiment 		---  an OpenSesame experiment, or None to run in plain
+		experiment 		--	an OpenSesame experiment, or None to run in plain
 							Python mode (default=None)
-		baudrate 		--- the baudrate of the boks, or None to use default
+		baudrate 		--	the baudrate of the boks, or None to use default
 							(default=None)
-		buttons 			--- a list of buttons that are used, or None to use all
+		buttons 		--	a list of buttons that are used, or None to use all
 							buttons (default=None)
-		timeout 			--- a timeout in milliseconds when collecting responses
+		timeout 		--	a timeout in milliseconds when collecting responses
 							or None for no timeout (default=None)
 		</DOC>"""
 
@@ -122,7 +124,7 @@ class libboks:
 		Collect a button press or release, depending on value
 
 		Arguments:
-		cmd _byte			--- CMD_WAIT_PRESS or CMD_WAIT_RELEASE
+		cmd _byte			--	CMD_WAIT_PRESS or CMD_WAIT_RELEASE
 
 		Returns:
 		A (button, timestamp) tuple. If a timeout occured, the button is None
@@ -150,7 +152,7 @@ class libboks:
 		second to 2, etc.
 
 		Arguments:
-		b 			--- a numeric value (a byte)
+		b 			--	a numeric value (a byte)
 
 		Returns:
 		A list of integers
@@ -285,7 +287,7 @@ class libboks:
 		functionality will be used instead
 
 		Arguments:
-		msg -- the message
+		msg --	the message
 		"""
 
 		print 'libboks: %s' % msg
@@ -325,7 +327,7 @@ class libboks:
 		libboks.get_button_release()
 
 		Arguments:
-		buttons			--- a list of buttons, where each button is an integer.
+		buttons			--	a list of buttons, where each button is an integer.
 							To enable all buttons, use None.
 		"""
 
@@ -363,7 +365,7 @@ class libboks:
 		not being pressed.
 
 		Keyword arguments:
-		continous		--- True for continuous, False for discontinuous
+		continuous		--- True for continuous, False for discontinuous
 							(default=True)
 		"""
 
@@ -372,6 +374,21 @@ class libboks:
 			self.dev.write(chr(1))
 		else:
 			self.dev.write(chr(0))
+			
+	def set_led(self, on=True):
+		
+		"""
+		Turns the LED on or off.
+		
+		Keyword arguments:
+		on	--	Indicates whether the LED should be on (True) or off (False)
+				(default=True)
+		"""
+		
+		if on:
+			self.dev.write(CMD_LED_ON)
+		else:
+			self.dev.write(CMD_LED_OFF)
 
 	def set_timeout(self, timeout):
 
