@@ -18,18 +18,16 @@
 // The version and model are used to identify the box to the client. The
 // version must be a 5 char string. The model musy be a 16 char string,
 // optionally right-padded with whitespace for short mode names.
-#define VERSION 			"0.1.5"
+#define VERSION 			"0.1.6"
 #define MODEL 				"dev.boks        "
 
 // The respective pins on Arduino to which the buttons are connected
-#define BUTTON_PIN_1 		2
-#define BUTTON_PIN_2 		4
-#define BUTTON_PIN_3 		7
-#define BUTTON_PIN_4 		8
-
-// The minimum number of consecutive samples required to detect a button
-// press or release
-#define DEBOUNCE_COUNT 		100
+#define BUTTON_PIN_1 		8
+#define BUTTON_PIN_2 		11
+#define BUTTON_PIN_3 		9
+#define BUTTON_PIN_4 		10
+#define BUTTON_PIN_8		12 // Should be used for the photodiode
+#define LED_PIN				13
 
 // The baud rate for serial port communication
 #define BAUD_RATE 			115200
@@ -49,11 +47,14 @@
 #define CMD_GET_T1			12
 #define CMD_GET_T2			13
 #define CMD_GET_TD			14
-#define CMD_GET_TIME			15
+#define CMD_GET_TIME		15
 #define CMD_GET_TIMEOUT		16
 #define	CMD_GET_BUTTONS		17
+#define	CMD_LED_ON			18
+#define CMD_LED_OFF			19
 
-// In order to be able to send the timeStamp, it needs to be mapped onto an array
+// In order to be able to communicate the timeStamp to the PC, it needs to be
+// mapped onto an array
 union timeStamp {
    unsigned long asLong;
    unsigned char asArray[4];
@@ -62,24 +63,26 @@ union timeStamp {
 
 // Define variables
 int cmd;
-int fromState;
+int	fromState;
 int toState;
-int state;
-int state1;
-int pState1;
+int button1;
+int button2;
+int button3;
+int button4;
+int button8; // Photodiode
+int	state1;
 int state2;
-int pState2;
 int state3;
-int pState3;
 int state4;
+int state8; // Photodiode
+int pState1;
+int pState2;
+int pState3;
 int pState4;
+int pState8; // Photodiode
 int i;
 char continuous;
 char c;
-byte button1;
-byte button2;
-byte button3;
-byte button4;
 timeStamp t1;
 timeStamp t2;
 timeStamp ts;
@@ -101,6 +104,9 @@ void setup()
 	digitalWrite(BUTTON_PIN_3, HIGH);
 	pinMode(BUTTON_PIN_4, INPUT);
 	digitalWrite(BUTTON_PIN_4, HIGH);
+	pinMode(BUTTON_PIN_8, INPUT); // Button 8 is the photodiode
+	digitalWrite(BUTTON_PIN_8, HIGH);
+	pinMode(LED_PIN, OUTPUT);	
 	reset();
 }
 
@@ -113,12 +119,14 @@ void reset()
 {
 	timeout.asLong = 0;
 	t1.asLong = 0;
-	t2.asLong = 0;
+	t2.asLong = 0;	
 	button1 = 1;
 	button2 = 1;
 	button3 = 1;
 	button4 = 1;
+	button8 = 0; // The photodiode is by default deactivated
 	continuous = 0;
+	digitalWrite(LED_PIN, HIGH); // Turn on LED
 }
 
 void loop()
@@ -145,22 +153,24 @@ void loop()
 			} else {
 				fromState = LOW;
 				toState = HIGH;
-			}
+			}			
 			pState1 = -1;
 			pState2 = -1;
 			pState3 = -1;
 			pState4 = -1;
+			pState8 = -1;
 			while (true) {
 				t2.asLong = micros();
 				if (timeout.asLong > 0 && t2.asLong - t1.asLong >=
 					timeout.asLong) {
 					Serial.write(255);
 					break;
-				}
+				}				
 				state1 = digitalRead(BUTTON_PIN_1);
 				state2 = digitalRead(BUTTON_PIN_2);
 				state3 = digitalRead(BUTTON_PIN_3);
-				state4 = digitalRead(BUTTON_PIN_4);
+				state4 = digitalRead(BUTTON_PIN_4);				
+				state8 = digitalRead(BUTTON_PIN_8);
 
 				if (button1 && (continuous || pState1 == fromState)
 					&& state1 == toState) {
@@ -181,11 +191,17 @@ void loop()
 					&& state4 == toState) {
 					Serial.write(4);
 					break;
-				}
+				}				
+				if (button8 && (continuous || pState8 == fromState)
+					&& state8 == toState) {
+					Serial.write(8);
+					break;
+				}								
 				pState1 = state1;
 				pState2 = state2;
 				pState3 = state3;
 				pState4 = state4;
+				pState8 = state8;
 			}
 
 		} else if (cmd == CMD_WAIT_SLEEP) {
@@ -221,15 +237,17 @@ void loop()
 				button2 = 1;
 				button3 = 1;
 				button4 = 1;
+				button8 = 0;
 			} else {
  				button1 = c & 1;
  				button2 = (c >> 1) & 1;
  				button3 = (c >> 2) & 1;
  				button4 = (c >> 3) & 1;
+				button8 = (c >> 7) & 1;
 			}
 		} else if (cmd == CMD_SET_CONTINUOUS) {
 			Serial.readBytes(&continuous, 1);
-
+l90 .
 		} else if (cmd == CMD_GET_T1) {
 			Serial.write(t1.asArray, 4);
 
@@ -251,7 +269,14 @@ void loop()
 			Serial.write(button1 +
 				(button2 << 1) |
 				(button3 << 2) |
-				(button4 << 3));
+				(button4 << 3) |
+				(button8 << 7));
+					
+		} else if (cmd == CMD_LED_ON) {
+			digitalWrite(LED_PIN, HIGH);
+			
+		} else if (cmd == CMD_LED_OFF) {
+			digitalWrite(LED_PIN, LOW);
 		}
 	}
 }
