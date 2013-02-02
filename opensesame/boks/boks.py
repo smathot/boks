@@ -28,7 +28,7 @@ class boks(item.item, generic_response.generic_response):
 
 	"""A plug-in for using the serial response box"""
 	
-	version = '0.1.7'
+	version = '0.1.8'
 
 	def __init__(self, name, experiment, string=None):
 
@@ -97,9 +97,9 @@ class boks(item.item, generic_response.generic_response):
 						raise exceptions.runtime_error( \
 							"'%s' is not a valid response in boks '%s'. Expecting a number in the range 1 .. 4." \
 							% (r, self.name))
-					if r < 1 or r > 4:
+					if r not in range(1,9):
 						raise exceptions.runtime_error( \
-							"'%s' is not a valid response in boks '%s'. Expecting a number in the range 1 .. 4." \
+							"'%s' is not a valid response in boks '%s'. Expecting a number in the range 1 .. 8." \
 							% (r, self.name))
 					self._allowed_responses.append(r)
 			if len(self._allowed_responses) == 0:
