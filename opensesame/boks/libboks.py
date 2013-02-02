@@ -70,17 +70,17 @@ class libboks:
 		Constructor
 
 		Keyword arguments:
-		port	 		-- 	the port to which the device is connected, None for
-							autodetect, or 'dummy' to use the keyboard as a
-							dummy-boks (default=None)
-		experiment 		--	an OpenSesame experiment, or None to run in plain
+		port	 		-- 	the port to which the device is connected, None #
+							for autodetect, or 'dummy' to use the keyboard as #
+							 dummy-boks (default=None)
+		experiment 		--	an OpenSesame experiment, or None to run in plain #
 							Python mode (default=None)
-		baudrate 		--	the baudrate of the boks, or None to use default
+		baudrate 		--	the baudrate of the boks, or None to use default #
 							(default=None)
-		buttons 		--	a list of buttons that are used, or None to use all
-							buttons (default=None)
-		timeout 		--	a timeout in milliseconds when collecting responses
-							or None for no timeout (default=None)
+		buttons 		--	a list of buttons that are used, or None to use #
+							all buttons (default=None)
+		timeout 		--	a timeout in milliseconds when collecting #
+							responses or None for no timeout (default=None)
 		</DOC>"""
 
 		# In dummy mode, we morph into the dummy class
@@ -172,7 +172,7 @@ class libboks:
 	def close(self):
 
 		"""<DOC>
-		Neatly close the device. This will deactivate the boks and close the
+		Neatly close the device. This will deactivate the boks and close the #
 		serial port connection.
 		</DOC>"""
 
@@ -192,8 +192,8 @@ class libboks:
 		Collect a button press
 
 		Returns:
-		A (button, timestamp) tuple. If a timeout occured, the button is None.
-		Otherwise buttons are integers. The timestamp is a float value in
+		A (button, timestamp) tuple. If a timeout occured, the button is None. #
+		Otherwise buttons are integers. The timestamp is a float value in #
 		milliseconds.
 		</DOC>"""
 
@@ -205,8 +205,8 @@ class libboks:
 		Collect a button release
 
 		Returns:
-		A (button, timestamp) tuple. If a timeout occured, the button is None.
-		Otherwise buttons are integers. The timestamp is a float value in
+		A (button, timestamp) tuple. If a timeout occured, the button is None. #
+		Otherwise buttons are integers. The timestamp is a float value in #
 		milliseconds.
 		</DOC>"""
 
@@ -226,24 +226,25 @@ class libboks:
 
 	def get_buttons(self):
 
-		"""
-		Reads the active buttons from the Boks
+		"""<DOC>
+		Retrieves the list of buttons that are 'active', i.e. that are #
+		used by get_button_press() and get_button_release().
 
 		Returns:
 		A list of active buttons. For example, [1,2,3,4].
-		"""
+		</DOC>"""
 
 		self.dev.write(CMD_GET_BUTTONS)
 		return self.byte_to_list(self.read_byte())
 
 	def get_timeout(self):
 
-		"""
-		Reads the timeout value from the Boks
+		"""<DOC>
+		Gets the timeout used by get_button_press() and get_button_release().
 
 		Returns:
 		A timeout value in milliseconds or None if no timeout is set
-		"""
+		</DOC>"""
 
 		self.dev.write(CMD_GET_TIMEOUT)
 		return .001 * self.read_ulong()
@@ -274,7 +275,7 @@ class libboks:
 		Retrieve boks device info
 
 		Returns:
-		A (firmware_version, model) tuple. The firmware_version is a string of
+		A (firmware_version, model) tuple. The firmware_version is a string of #
 		the format X.Y.Z. The model is a short string.
 		</DOC>"""
 
@@ -322,14 +323,14 @@ class libboks:
 
 	def set_buttons(self, buttons):
 
-		"""
-		Sets which buttons should be used for libboks.get_button_press() and
+		"""<DOC>
+		Sets which buttons should be used for libboks.get_button_press() and #
 		libboks.get_button_release()
 
 		Arguments:
-		buttons			--	a list of buttons, where each button is an integer.
-							To enable all buttons, use None.
-		"""
+		buttons			--	a list of buttons, where each button is an #
+							integer. To enable all buttons, use None.
+		</DOC>"""
 
 		if buttons == None:
 			buttons = all_buttons
@@ -355,19 +356,19 @@ class libboks:
 
 	def set_continuous(self, continuous=True):
 
-		"""
-		Determines whether get_button_press() and get_button_release() are
-		triggered only by signal changes (discontinuous) or also by continuous
-		signals. The Boks is by default in discontinuous mode, which is generally
-		what you want. For example, in continuous mode, the get_button_release()
-		will respond right away if any of the buttons is not pressed, whereas you
-		are generally interested only in buttons that go from being pressed to
-		not being pressed.
+		"""<DOC>
+		Determines whether get_button_press() and get_button_release() are #
+		triggered only by signal changes (discontinuous) or also by continuous #
+		signals. The Boks is by default in discontinuous mode, which is #
+		generally what you want. For example, in continuous mode, #
+		get_button_release() will respond right away if any of the buttons is #
+		not pressed, whereas you are generally interested only in buttons that #
+		go from being pressed to not being pressed.
 
 		Keyword arguments:
-		continuous		--- True for continuous, False for discontinuous
+		continuous		--	True for continuous, False for discontinuous
 							(default=True)
-		"""
+		</DOC>"""
 
 		self.dev.write(CMD_SET_CONTINUOUS)
 		if continuous:
@@ -377,13 +378,13 @@ class libboks:
 			
 	def set_led(self, on=True):
 		
-		"""
+		"""<DOC>
 		Turns the LED on or off.
 		
 		Keyword arguments:
-		on	--	Indicates whether the LED should be on (True) or off (False)
+		on	--	Indicates whether the LED should be on (True) or off (False) #
 				(default=True)
-		"""
+		</DOC>"""
 		
 		if on:
 			self.dev.write(CMD_LED_ON)
@@ -392,14 +393,13 @@ class libboks:
 
 	def set_timeout(self, timeout):
 
-		"""
-		Sets the timeout used by libboks.get_button_press() and
-		libboks.get_button_release()
+		"""<DOC>
+		Sets the timeout used by get_button_press() and get_button_release()
 
 		Arguments:
-		timeout			--- a value in milliseconds. Use 0 or None to disable
+		timeout			--	a value in milliseconds. Use 0 or None to disable #
 							timeout
-		"""
+		</DOC>"""
 
 		if timeout == None:
 			timeout = 0
