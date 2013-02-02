@@ -247,7 +247,7 @@ void loop()
 			}
 		} else if (cmd == CMD_SET_CONTINUOUS) {
 			Serial.readBytes(&continuous, 1);
-l90 .
+			
 		} else if (cmd == CMD_GET_T1) {
 			Serial.write(t1.asArray, 4);
 
