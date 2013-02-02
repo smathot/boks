@@ -19,11 +19,13 @@ import sys
 import libboks
 from time import time, sleep
 from timeit import timeit
+import numpy as np
+from matplotlib import pyplot as plt
 
-def test_latency(b, N=100):
+def test_commspeed(b, N=100):
 	
 	"""
-	Tests the latency of the communication between the Boks and the PC. In
+	Tests the speed of the communication between the Boks and the PC. In
 	general, commands that are sent to the Arduino should be much faster than
 	commands that involve bidirectional communication. With respect to response
 	time accuracy, the most important command is CMD_SET_T1, because T1 is the
@@ -62,6 +64,43 @@ def test_latency(b, N=100):
 	for cmd in cmd_list:
 		t = timeit(cmd, setup='from __main__ import b, libboks', number=N)
 		print '[%.2fms] %s' % (1000.*t/N, cmd)
+		
+def test_latency(b, N=100):
+	
+	"""
+	Tests the minimum response latency of the Boks. That is, the response time
+	to a continuously pressed button while the Boks is in continuous mode.
+	
+	Arguments:
+	b	--	a Boks instance
+	
+	Keyword arguments:
+	N	--	the number of test runs to conduct
+	"""	
+		
+	b.set_continuous(False)
+	b.set_buttons( [1, 2, 3, 4] )
+	print 'Press a button to continue ...'
+	b.get_button_press()
+	b.set_continuous(True)
+	a = np.empty(N)
+	for i in range(N):
+		t1 = b.time()
+		button, t2 = b.get_button_press()
+		a[i] = t2-t1
+	ax = plt.subplot(111)
+	a *= 1000
+	plt.plot(a, '.', color='#888a85')	
+	#plt.ylim(50, 150)
+	plt.axhline(a.mean(), color='#3465a4')
+	plt.xlabel('Test #')
+	plt.ylabel('Response latency ($\mu$s)')
+	plt.text(.5, .9, 'mean = %.2f$\mu$s, std = %.2f$\mu$s, min = %.2f$\mu$s, max = %.2f$\mu$s' % \
+		(a.mean(), a.std(), a.min(), a.max()), horizontalalignment='center', \
+		verticalalignment='center', transform=ax.transAxes)
+	plt.savefig('results\bechmark1.png')
+	plt.show()
+		
 			
 def test_buttons(b):
 	
@@ -143,7 +182,7 @@ if __name__ == '__main__':
 	"""Main script"""
 
 	print '\nBoks test suite\n'
-	print 'Usage: unittest [buttons] [led] [photodiode] [latency]\n'	
+	print 'Usage: unittest [buttons] [led] [photodiode] [latency] [commspeed]\n'	
 	b = libboks.libboks()	
 	for arg in sys.argv:
 		func = 'test_%s' % arg
