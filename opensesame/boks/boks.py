@@ -28,7 +28,7 @@ class boks(item.item, generic_response.generic_response):
 
 	"""A plug-in for using the serial response box"""
 	
-	version = '0.10'
+	version = '0.1.7'
 
 	def __init__(self, name, experiment, string=None):
 
@@ -130,7 +130,7 @@ class boks(item.item, generic_response.generic_response):
 		# Send the timeout and allowed responses to the boks
 		self.experiment.boks.set_timeout(self._timeout)
 		self.experiment.boks.set_buttons(self._allowed_responses)
-		
+				
 		# Get the response
 		self.experiment.response, self.experiment.end_response_interval = \
 			self.experiment.boks.get_button_press()
