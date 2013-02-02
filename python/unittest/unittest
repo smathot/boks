@@ -15,46 +15,140 @@
 # You should have received a copy of the GNU General Public License
 # along with boks. If not, see <http://www.gnu.org/licenses/>.
 
-from libboks import libboks
-from time import time
+import sys
+import libboks
+from time import time, sleep
+from timeit import timeit
 
-print '\nStarting Boks test suite\n'
+def test_latency(b, N=100):
+	
+	"""
+	Tests the latency of the communication between the Boks and the PC. In
+	general, commands that are sent to the Arduino should be much faster than
+	commands that involve bidirectional communication. With respect to response
+	time accuracy, the most important command is CMD_SET_T1, because T1 is the
+	timestamp that is used to base the response times on. If CMD_SET_T1 takes
+	too long to return, the Arduino and computer clocks will not be synchronized
+	properly, and response time accuracy will suffer. Realistic values are in
+	the 50 microsecond range (0.05 ms).
+	
+	Arguments:
+	b	--	a Boks instance
+	
+	Keyword arguments:
+	N	--	the number of test runs to conduct
+	"""
+	
+	cmd_list = [
+		'b.dev.write(libboks.CMD_SET_T1)',
+		'b.dev.write(libboks.CMD_SET_T2)',
+		'b.dev.write(libboks.CMD_GET_TD)',
+		'b.read_ulong()',
+		'b.set_buttons( [1, 2, 3, 4] )',
+		'b.set_timeout(5000)',
+		'b.set_led(True)',
+		'b.get_button_state()',
+		'b.get_button_release()',
+		]
+		
+	print 'Testing each command %d times' % N
+		
+	# Suppress debug output and enable continuous mode
+	def dummy(x): pass
+	b.msg = dummy
+	b.set_continuous(True)
+	
+	# Run all commands using timeit
+	for cmd in cmd_list:
+		t = timeit(cmd, setup='from __main__ import b, libboks', number=N)
+		print '[%.2fms] %s' % (1000.*t/N, cmd)
+			
+def test_buttons(b):
+	
+	"""
+	Tests whether the buttons respond as expected.
+	
+	Arguments:
+	b	--	a Boks instance
+	"""	
 
-b = libboks()
+	print 'Time: %s' % b.time()
+	b.set_buttons( [1, 2, 3, 4] )
+	b.set_timeout(5000)
 
-print 'Time: %s' % b.time()
-b.set_buttons( [1, 2, 3, 4] )
-b.set_timeout(2000)
+	print 'Buttons: %s' % b.get_buttons()
+	print 'Timeout: %s' % b.get_timeout()
 
-print 'Buttons: %s' % b.get_buttons()
-print 'Timeout: %s' % b.get_timeout()
+	print 'Waiting for button press'
+	t1 = .001 * time()
+	button, t2 = b.get_button_press()
+	print 'Received button %s press in %.2f ms' % (button, t2-t1)
 
-print 'Waiting for button press'
-t1 = .001 * time()
-button, t2 = b.get_button_press()
-print 'Received button %s press in %.2f ms' % (button, t2-t1)
+	print 'Waiting for button release'
+	t1 = .001 * time()
+	button, t2 = b.get_button_release()
+	print 'Received button %s release in %.2f ms' % (button, t2-t1)
 
-print 'Waiting for button release'
-t1 = .001 * time()
-button, t2 = b.get_button_release()
-print 'Received button %s release in %.2f ms' % (button, t2-t1)
+	print 'Enabling continuous mode'
+	b.set_continuous(True)
 
-print 'Enabling continuous mode'
-b.set_continuous(True)
+	print 'Waiting for button press'
+	t1 = .001 * time()
+	button, t2 = b.get_button_press()
+	print 'Received button %s press in %.2f ms' % (button, t2-t1)
 
-print 'Waiting for button press'
-t1 = .001 * time()
-button, t2 = b.get_button_press()
-print 'Received button %s press in %.2f ms' % (button, t2-t1)
+	print 'Waiting for button release'
+	t1 = .001 * time()
+	button, t2 = b.get_button_release()
+	print 'Received button %s release in %.2f ms' % (button, t2-t1)
 
+def test_led(b):
+	
+	"""
+	Tests whether the LED can be switched on and off.
+	
+	Arguments:
+	b	--	a Boks instance
+	"""		
 
-print 'Waiting for button release'
-t1 = .001 * time()
-button, t2 = b.get_button_release()
-print 'Received button %s release in %.2f ms' % (button, t2-t1)
+	print 'Testing LED (it should blink 5 times)'
+	for i in range(5):
+		b.set_led(True)
+		sleep(.5)
+		b.set_led(False)
+		sleep(.5)
+		
+def test_photodiode(b):
+	
+	"""
+	Tests whether the photodiode responds as expected. The photodiode is a
+	special button (8), which is switched off by default. This test is
+	performed in discontinuous mode.
+	
+	Arguments:
+	b	--	a Boks instance
+	"""			
+	
+	print 'Activating photodiode (= button 8)'
+	b.set_buttons( [8] )
+	b.set_timeout(None)
+	b.set_continuous(True)
+	print 'Waiting for button press'
+	t1 = .001 * time()
+	button, t2 = b.get_button_press()
+	print 'Received button %s press in %.2f ms' % (button, t2-t1)
+		
+if __name__ == '__main__':
+	
+	"""Main script"""
 
-print 'Time: %s' % b.time()
-
-b.close()
-
-print '\nDone!\n'
+	print '\nBoks test suite\n'
+	print 'Usage: unittest [buttons] [led] [photodiode] [latency]\n'	
+	b = libboks.libboks()	
+	for arg in sys.argv:
+		func = 'test_%s' % arg
+		if func in dir():
+			print '\nStarting test component "%s"\n' % func
+			exec('%s(b)' % func)
+			print '\nDone!\n'			
+	b.close()	
