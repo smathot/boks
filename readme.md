@@ -1,7 +1,7 @@
 Boks
 ====
 
-Copyright (2012-2013) Sebastiaan Mathôt\\
+Copyright (2012-2013) Sebastiaan Mathôt//
 http://www.cogsci.nl/boks
 
 About
