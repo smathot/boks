@@ -1,0 +1,4 @@
+#!/bin/bash
+./unittest latency noise commspeed
+kramdown testlog.md > testlog.html
+wkhtmltopdf testlog.html testlog.pdf
