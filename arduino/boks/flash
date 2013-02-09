@@ -1,0 +1,83 @@
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+
+"""
+This file is part of Boks.
+
+Boks is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Boks is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Boks.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+import urllib2
+import json
+import sys
+import subprocess
+from optparse import OptionParser
+
+# GitHub repository tag url
+tagUrl = 'https://api.github.com/repos/smathot/boks/tags'
+
+# Parse command line arguments
+parser = OptionParser()
+parser.add_option("-s", "--src", dest="src", help= \
+	"The sketch source. This can be a filename or 'github' to retrieve the latest version from GitHub",
+	default="github")
+parser.add_option("-m", "--model", dest="model", help="The model name.",
+	default="dev.boks")
+parser.add_option("-b", "--buttons", dest="buttons", type=int, 
+	help="The number of buttons on the Boks (1-7).", default="2")
+parser.add_option("-u", "--upload", action='store_true', dest="upload",
+	help="Upload the sketch to the Boks.", default=False)		
+(options, args) = parser.parse_args()
+
+print '\nBoks firmware flash\n'
+
+if options.src == 'github':
+	fd = urllib2.urlopen(tagUrl)
+	tagJson = json.loads(fd.read())
+	release = tagJson[0]['name']
+	commit = tagJson[0]['commit']['sha']
+	srcUrl = 'https://raw.github.com/smathot/boks/%s/arduino/boks/boks.ino' % release
+	
+	print 'Most recent tag %s (#%s)' % (release, commit)
+	print 'Grabbing sketch from %s' % srcUrl	
+	fSrc = urllib2.urlopen(srcUrl)
+else:
+	print 'Custom sketch file specified'
+	print 'Grabbing sketch from %s' % options.src
+	fSrc = open(options.src)
+	
+print 'Writing modified boks.ini ...'
+fIno = open('boks.ino', 'w')
+for l in fSrc:
+	if '#define MODEL' in l:
+		l = '#define MODEL\t"{:16}"\n'.format(options.model)
+	for i in range(1, 8):
+		if '#define BUTTON_PIN_%d' % i in l and options.buttons < i:
+			l = '#define BUTTON_PIN_%d\t0\n' % i
+			break
+	if l != None:
+		fIno.write(l)
+fIno.close()
+print 'Done'
+
+print 'Compiling sketch ...'
+if subprocess.call(['make']) > 0:
+	sys.exit(1)
+print 'Done'
+
+if options.upload:
+	print 'Uploading sketch ...'
+	if subprocess.call(['make', 'upload']) > 0:
+		sys.exit(1)
+	print 'Done'

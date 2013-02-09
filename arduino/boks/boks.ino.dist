@@ -19,16 +19,16 @@
 // version must be a 5 char string. The model musy be a 16 char string,
 // optionally right-padded with whitespace for short mode names.
 #define VERSION 			"0.1.9"
-#define MODEL	"dev.boks        "
+#define MODEL 				"dev.boks        "
 
 // The respective pins on Arduino to which the buttons are connected
 #define BUTTON_PIN_1 		8
 #define BUTTON_PIN_2 		11
-#define BUTTON_PIN_3	0
-#define BUTTON_PIN_4	0
-#define BUTTON_PIN_5	0
-#define BUTTON_PIN_6	0
-#define BUTTON_PIN_7	0
+#define BUTTON_PIN_3 		9
+#define BUTTON_PIN_4 		10
+#define BUTTON_PIN_5		0
+#define BUTTON_PIN_6 		0
+#define BUTTON_PIN_7 		0
 #define BUTTON_PIN_8		12 // Should be used for the photodiode
 #define LED_PIN				13
 
