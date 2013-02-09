@@ -42,14 +42,15 @@ CMD_GET_TIMEOUT		= chr(16)
 CMD_GET_BUTTONS		= chr(17)
 CMD_LED_ON			= chr(18)
 CMD_LED_OFF			= chr(19)
+CMD_GET_BTNCNT		= chr(20)
 
 # Various parameters
 baudrate = 115200
 button_timeout = 255
-all_buttons = [1,2,3,4] # Except the photodiode, which is button 8
+all_buttons = [] # Except the photodiode, which is button 8
 firmware_version_length = 5
 model_length = 16
-version = 0.1.9
+version = '0.1.9'
 
 class boks_exception(Exception):
 
@@ -159,15 +160,23 @@ class libboks:
 		"""
 
 		l = []
-		if b & 1:
-			l.append(1)
-		if b & 2:
-			l.append(2)
-		if b & 4:
-			l.append(3)
-		if b & 8:
-			l.append(4)
+		for i in range(0, 8):
+			if b & 2**i:
+				l.append(i+1)
 		return l
+	
+	def button_count(self):
+		
+		"""<DOC>
+		Gets the number of buttons that are physically present on the device. #
+		This number includes the photodiode.
+		
+		Returns:
+		The number of buttons
+		</DOC>"""
+		
+		self.dev.write(CMD_GET_BTNCNT)
+		return self.read_byte()
 
 	def close(self):
 
@@ -329,7 +338,8 @@ class libboks:
 
 		Arguments:
 		buttons			--	a list of buttons, where each button is an #
-							integer. To enable all buttons, use None.
+							integer. To enable all buttons (except for the
+							photodiode), use None.
 		</DOC>"""
 
 		if buttons == None:
@@ -349,7 +359,7 @@ class libboks:
 			v += 1 << (button-1)
 		if v > 255:
 			raise boks_exception( \
-				'Expecting button numbers between 1 and 4')
+				'Expecting button numbers between 1 and 8')
 		self.msg('Setting buttons %s with value %s' % (buttons, bin(v)))
 		self.dev.write(CMD_SET_BUTTONS)
 		self.dev.write(chr(v))

@@ -21,7 +21,9 @@
 #define VERSION 			"0.1.9"
 #define MODEL 				"dev.boks        "
 
-// The respective pins on Arduino to which the buttons are connected
+// The respective pins on Arduino to which the buttons are connected. To disable
+// a button, set the pin to zero. Buttons 1 - 7 are actual buttons, button 8 is
+// reserved for the photodiode.
 #define BUTTON_PIN_1 		8
 #define BUTTON_PIN_2 		11
 #define BUTTON_PIN_3 		9
@@ -29,32 +31,33 @@
 #define BUTTON_PIN_5		0
 #define BUTTON_PIN_6 		0
 #define BUTTON_PIN_7 		0
-#define BUTTON_PIN_8		12 // Should be used for the photodiode
+#define BUTTON_PIN_8		12 // Photodiode
 #define LED_PIN				13
 
 // The baud rate for serial port communication
 #define BAUD_RATE 			115200
 
 // Signals for communicating with the library
-#define CMD_RESET			1
-#define CMD_IDENTIFY 		2
-#define CMD_WAIT_PRESS 		3
-#define CMD_WAIT_RELEASE 	4
-#define CMD_WAIT_SLEEP		5
-#define CMD_BUTTON_STATE	6
-#define CMD_SET_T1			7
-#define CMD_SET_T2			8
-#define CMD_SET_TIMEOUT		9
-#define CMD_SET_BUTTONS		10
-#define CMD_SET_CONTINUOUS	11
-#define CMD_GET_T1			12
-#define CMD_GET_T2			13
-#define CMD_GET_TD			14
-#define CMD_GET_TIME		15
-#define CMD_GET_TIMEOUT		16
-#define	CMD_GET_BUTTONS		17
-#define	CMD_LED_ON			18
-#define CMD_LED_OFF			19
+#define CMD_RESET				1
+#define CMD_IDENTIFY 			2
+#define CMD_WAIT_PRESS 			3
+#define CMD_WAIT_RELEASE 		4
+#define CMD_WAIT_SLEEP			5
+#define CMD_BUTTON_STATE		6
+#define CMD_SET_T1				7
+#define CMD_SET_T2				8
+#define CMD_SET_TIMEOUT			9
+#define CMD_SET_BUTTONS			10
+#define CMD_SET_CONTINUOUS		11
+#define CMD_GET_T1				12
+#define CMD_GET_T2				13
+#define CMD_GET_TD				14
+#define CMD_GET_TIME			15
+#define CMD_GET_TIMEOUT			16
+#define	CMD_GET_BUTTONS			17
+#define	CMD_LED_ON				18
+#define CMD_LED_OFF				19
+#define CMD_GET_BTNCNT			20
 
 // In order to be able to communicate the timeStamp to the PC, it needs to be
 // mapped onto an array
@@ -157,11 +160,22 @@ void reset()
 {
 	timeout.asLong = 0;
 	t1.asLong = 0;
-	t2.asLong = 0;	
-	button1 = 1;
-	button2 = 1;
-	button3 = 1;
-	button4 = 1;
+	t2.asLong = 0;
+	// Turn on all buttons that are supported by the device
+	if (BUTTON_PIN_1) { button1 = 1; }
+	else { button1 = 0; }
+	if (BUTTON_PIN_2) { button2 = 1; }
+	else { button2 = 0; }
+	if (BUTTON_PIN_3) { button3 = 1; }
+	else { button3 = 0; }
+	if (BUTTON_PIN_4) { button4 = 1; }
+	else { button4 = 0; }
+	if (BUTTON_PIN_5) { button5 = 1; }
+	else { button5 = 0; }
+	if (BUTTON_PIN_6) { button6 = 1; }
+	else { button6 = 0; }
+	if (BUTTON_PIN_7) { button7 = 1; }
+	else { button7 = 0; }
 	button8 = 0; // The photodiode is by default deactivated
 	continuous = 0;
 	digitalWrite(LED_PIN, HIGH); // Turn on LED
@@ -200,6 +214,14 @@ void loop()
 			pState6 = -1;
 			pState7 = -1;
 			pState8 = -1;
+			state1 = -1;
+			state2 = -1;
+			state3 = -1;
+			state4 = -1;
+			state5 = -1;
+			state6 = -1;
+			state7 = -1;
+			state8 = -1;
 			while (true) {
 				t2.asLong = micros();
 				if (timeout.asLong > 0 && t2.asLong - t1.asLong >=
@@ -208,13 +230,13 @@ void loop()
 					break;
 				}
 				if (BUTTON_PIN_1) { state1 = digitalRead(BUTTON_PIN_1); }				
-				if (BUTTON_PIN_2) { state1 = digitalRead(BUTTON_PIN_2); }
-				if (BUTTON_PIN_3) { state1 = digitalRead(BUTTON_PIN_3); }
-				if (BUTTON_PIN_4) { state1 = digitalRead(BUTTON_PIN_4); }
-				if (BUTTON_PIN_5) { state1 = digitalRead(BUTTON_PIN_5); }
-				if (BUTTON_PIN_6) { state1 = digitalRead(BUTTON_PIN_6); }
-				if (BUTTON_PIN_7) { state1 = digitalRead(BUTTON_PIN_7); }
-				if (BUTTON_PIN_8) { state1 = digitalRead(BUTTON_PIN_8); }
+				if (BUTTON_PIN_2) { state2 = digitalRead(BUTTON_PIN_2); }
+				if (BUTTON_PIN_3) { state3 = digitalRead(BUTTON_PIN_3); }
+				if (BUTTON_PIN_4) { state4 = digitalRead(BUTTON_PIN_4); }
+				if (BUTTON_PIN_5) { state5 = digitalRead(BUTTON_PIN_5); }
+				if (BUTTON_PIN_6) { state6 = digitalRead(BUTTON_PIN_6); }
+				if (BUTTON_PIN_7) { state7 = digitalRead(BUTTON_PIN_7); }
+				if (BUTTON_PIN_8) { state8 = digitalRead(BUTTON_PIN_8); }
 				if (button1 && (continuous || pState1 == fromState)
 					&& state1 == toState) {
 					Serial.write(1);
@@ -241,7 +263,7 @@ void loop()
 					break;
 				}
 				if (button6 && (continuous || pState6 == fromState)
-					&& state4 == toState) {
+					&& state6 == toState) {
 					Serial.write(6);
 					break;
 				}
@@ -259,9 +281,9 @@ void loop()
 				pState2 = state2;
 				pState3 = state3;
 				pState4 = state4;
-				pState4 = state5;
-				pState4 = state6;
-				pState4 = state7;
+				pState5 = state5;
+				pState6 = state6;
+				pState7 = state7;
 				pState8 = state8;
 			}
 
@@ -275,10 +297,14 @@ void loop()
 
 		} else if (cmd == CMD_BUTTON_STATE) {
 			Serial.write(
-				!digitalRead(BUTTON_PIN_1) |
-				!digitalRead(BUTTON_PIN_2) << 1 |
-				!digitalRead(BUTTON_PIN_3) << 2 |
-				!digitalRead(BUTTON_PIN_4) << 3
+				(button1 && !digitalRead(BUTTON_PIN_1)) |
+				(button2 && !digitalRead(BUTTON_PIN_2)) << 1 |
+				(button3 && !digitalRead(BUTTON_PIN_3)) << 2 |
+				(button4 && !digitalRead(BUTTON_PIN_4)) << 3 |
+				(button5 && !digitalRead(BUTTON_PIN_5)) << 4 |
+				(button6 && !digitalRead(BUTTON_PIN_6)) << 5 |
+				(button7 && !digitalRead(BUTTON_PIN_7)) << 6 |
+				(button8 && !digitalRead(BUTTON_PIN_8)) << 7
 			);
 
 		} else if (cmd == CMD_SET_T1) {
@@ -298,14 +324,30 @@ void loop()
 				button2 = 1;
 				button3 = 1;
 				button4 = 1;
+				button5 = 1;
+				button6 = 1;
+				button7 = 1;
 				button8 = 0;
 			} else {
  				button1 = c & 1;
  				button2 = (c >> 1) & 1;
  				button3 = (c >> 2) & 1;
  				button4 = (c >> 3) & 1;
+				button5 = (c >> 4) & 1;
+				button6 = (c >> 5) & 1;
+				button7 = (c >> 6) & 1;
 				button8 = (c >> 7) & 1;
 			}
+			// Turn off buttons that are not supported by this device
+			if (!BUTTON_PIN_1) { button1 = 0; }
+			if (!BUTTON_PIN_2) { button2 = 0; }
+			if (!BUTTON_PIN_3) { button3 = 0; }
+			if (!BUTTON_PIN_4) { button4 = 0; }
+			if (!BUTTON_PIN_5) { button5 = 0; }
+			if (!BUTTON_PIN_6) { button6 = 0; }
+			if (!BUTTON_PIN_7) { button7 = 0; }
+			if (!BUTTON_PIN_8) { button8 = 0; }
+			
 		} else if (cmd == CMD_SET_CONTINUOUS) {
 			Serial.readBytes(&continuous, 1);
 			
@@ -331,6 +373,9 @@ void loop()
 				(button2 << 1) |
 				(button3 << 2) |
 				(button4 << 3) |
+				(button5 << 4) |
+				(button6 << 5) |
+				(button7 << 6) |
 				(button8 << 7));
 					
 		} else if (cmd == CMD_LED_ON) {
@@ -338,7 +383,19 @@ void loop()
 			
 		} else if (cmd == CMD_LED_OFF) {
 			digitalWrite(LED_PIN, LOW);
-		}
+					
+		} else if (cmd == CMD_GET_BTNCNT) {
+			Serial.write(
+				(BUTTON_PIN_1 > 0) + 
+				(BUTTON_PIN_2 > 0) + 
+				(BUTTON_PIN_3 > 0) + 
+				(BUTTON_PIN_4 > 0) + 
+				(BUTTON_PIN_5 > 0) + 
+				(BUTTON_PIN_6 > 0) + 
+				(BUTTON_PIN_7 > 0) + 
+				(BUTTON_PIN_8 > 0)
+			);
+		} 
 	}
 }
 

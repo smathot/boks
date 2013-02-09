@@ -16,12 +16,15 @@
 # along with boks. If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-import libboks
 from time import time, sleep
 from timeit import timeit
 import numpy as np
 from matplotlib import pyplot as plt
+import imp
+import os
 
+libboks = imp.load_source('libboks', '../opensesame/boks/libboks.py')
+	
 def test_commspeed(b, N=100):
 	
 	"""
@@ -111,11 +114,10 @@ def test_buttons(b):
 	b	--	a Boks instance
 	"""	
 
-	print 'Time: %s' % b.time()
-	b.set_buttons( [1, 2, 3, 4] )
 	b.set_timeout(5000)
 
-	print 'Buttons: %s' % b.get_buttons()
+	print 'Available buttons (including photodiode): %s' % b.button_count()	
+	print 'Currently active buttons: %s' % b.get_buttons()	
 	print 'Timeout: %s' % b.get_timeout()
 
 	print 'Waiting for button press'
@@ -140,6 +142,8 @@ def test_buttons(b):
 	t1 = .001 * time()
 	button, t2 = b.get_button_release()
 	print 'Received button %s release in %.2f ms' % (button, t2-t1)
+	
+	print 'Done'
 
 def test_led(b):
 	
@@ -183,7 +187,8 @@ if __name__ == '__main__':
 
 	print '\nBoks test suite\n'
 	print 'Usage: unittest [buttons] [led] [photodiode] [latency] [commspeed]\n'	
-	b = libboks.libboks()	
+	b = libboks.libboks()
+	print 'Boks reports %d buttons' % b.button_count()
 	for arg in sys.argv:
 		func = 'test_%s' % arg
 		if func in dir():

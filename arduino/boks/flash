@@ -35,29 +35,35 @@ parser.add_option("-s", "--src", dest="src", help= \
 parser.add_option("-m", "--model", dest="model", help="The model name.",
 	default="dev.boks")
 parser.add_option("-b", "--buttons", dest="buttons", type=int, 
-	help="The number of buttons on the Boks (1-7).", default="2")
+	help="The number of buttons on the Boks, excluding photodiode", default="2")
+parser.add_option("-n", "--no-diode", dest="no_diode", action='store_true',
+	help="Do not include photodiode (button 8)", default=False)
 parser.add_option("-u", "--upload", action='store_true', dest="upload",
-	help="Upload the sketch to the Boks.", default=False)		
+	help="Upload sketch to the Boks", default=False)		
 (options, args) = parser.parse_args()
 
 print '\nBoks firmware flash\n'
 
 if options.src == 'github':
+	# Get the Boks sketch from GitHub
 	fd = urllib2.urlopen(tagUrl)
 	tagJson = json.loads(fd.read())
 	release = tagJson[0]['name']
 	commit = tagJson[0]['commit']['sha']
-	srcUrl = 'https://raw.github.com/smathot/boks/%s/arduino/boks/boks.ino' % release
-	
-	print 'Most recent tag %s (#%s)' % (release, commit)
+	srcUrl = \
+		'https://raw.github.com/smathot/boks/%s/arduino/boks/boks.ino.dist' \
+		% release	
+	print 'Most recent tag is %s (#%s)' % (release, commit)
 	print 'Grabbing sketch from %s' % srcUrl	
 	fSrc = urllib2.urlopen(srcUrl)
 else:
+	# Get the Boks sketch from a local file
 	print 'Custom sketch file specified'
 	print 'Grabbing sketch from %s' % options.src
 	fSrc = open(options.src)
 	
-print 'Writing modified boks.ini ...'
+# Customizing the Boks sketch based on the parameters
+print 'Writing modified boks.ino ...'
 fIno = open('boks.ino', 'w')
 for l in fSrc:
 	if '#define MODEL' in l:
@@ -66,6 +72,8 @@ for l in fSrc:
 		if '#define BUTTON_PIN_%d' % i in l and options.buttons < i:
 			l = '#define BUTTON_PIN_%d\t0\n' % i
 			break
+	if '#define BUTTON_PIN_8' in l and options.no_diode:
+		l = '#define BUTTON_PIN_8\t0\n'
 	if l != None:
 		fIno.write(l)
 fIno.close()

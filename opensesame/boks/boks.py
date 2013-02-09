@@ -189,14 +189,14 @@ class qtboks(boks, qtplugin.qtplugin):
 			
 		# Load icons for buttons
 		self.icons = {}
-		for i in range(1,5):			
+		for i in range(1,9):			
 			icon = QtGui.QIcon()
 			icon.addPixmap(QtGui.QPixmap(os.path.join( \
 				os.path.dirname(__file__), 'icons', 'active%d.png' % i)),
 				QtGui.QIcon.Normal)
 			icon.addPixmap(QtGui.QPixmap(os.path.join( \
 				os.path.dirname(__file__), 'icons', 'inactive%d.png' % i)),
-				QtGui.QIcon.Disabled)				
+				QtGui.QIcon.Disabled)
 			getattr(self.boks_widget.ui, 'button_%d' % i).setIcon(icon)
 							
 		self.edit_vbox.addWidget(self.boks_widget)
@@ -275,14 +275,33 @@ class boks_test_thread(QtCore.QThread):
 		_boks = imp.load_source("libboks", path)
 		try:
 			self.boks = _boks.libboks(dev, experiment=self.boks_item.experiment)
-			firmware_version, model = self.boks.info()			
+			firmware_version, model = self.boks.info()
+			button_count = self.boks.button_count()			
 		except:
 			firmware_version = 'NA'
-			model = 'No boks detected'			
+			model = 'No boks detected'
+			button_count = 0
 			self.boks = None
 		self.boks_item.boks_widget.ui.edit_firmware_version.setText( \
 			firmware_version)
-		self.boks_item.boks_widget.ui.edit_model.setText(model)							
+		self.boks_item.boks_widget.ui.edit_model.setText(model)
+		self.boks_item.boks_widget.ui.spinbox_button_count.setValue( \
+			button_count)
+			
+		# Change the icon for the buttons that are not reported by the device.
+		# The trick is to set all buttons and then see which buttons are
+		# actually accepted by the Boks.
+		if self.boks != None:
+			self.boks.set_buttons(range(1,9))
+			l = self.boks.get_buttons()
+			for i in range(1,9):
+				if i not in l:
+					icon = QtGui.QIcon()
+					icon.addPixmap(QtGui.QPixmap(os.path.join( \
+						os.path.dirname(__file__), 'icons', 'unavailable.png')),
+						QtGui.QIcon.Disabled)
+					getattr(self.boks_item.boks_widget.ui, 'button_%d' \
+						% i).setIcon(icon)
 		
 	def run(self):
 		
@@ -290,14 +309,9 @@ class boks_test_thread(QtCore.QThread):
 				
 		while self.active and self.boks != None:
 			pressed_buttons = self.boks.get_button_state()
-			self.boks_item.boks_widget.ui.button_1.setEnabled(1 in \
-				pressed_buttons)
-			self.boks_item.boks_widget.ui.button_2.setEnabled(2 in \
-				pressed_buttons)
-			self.boks_item.boks_widget.ui.button_3.setEnabled(3 in \
-				pressed_buttons)
-			self.boks_item.boks_widget.ui.button_4.setEnabled(4 in \
-				pressed_buttons)			
+			for i in range(1, 9):
+				button = getattr(self.boks_item.boks_widget.ui, 'button_%d' % i)
+				button.setEnabled(i in pressed_buttons)
 		if self.boks != None:
 			self.boks.close()
 		
