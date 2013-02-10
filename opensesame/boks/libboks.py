@@ -337,7 +337,7 @@ class libboks:
 		Example:
 		>>> firmware, model = exp.boks.info()
 		>>> print 'Boks model: %s' % model
-		>>> print 'Boks firmware: %s % firmware
+		>>> print 'Boks firmware: %s' % firmware
 		</DOC>"""
 
 		return self.firmware_version, self.model
