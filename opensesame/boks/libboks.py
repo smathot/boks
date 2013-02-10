@@ -82,6 +82,14 @@ class libboks:
 							all buttons (default=None)
 		timeout 		--	a timeout in milliseconds when collecting #
 							responses or None for no timeout (default=None)
+							
+		Example:
+		>>> # Collect a response with a 2000ms timeout
+		>>> exp.boks.set_timeout(2000)
+		>>> t1 = self.time()
+		>>> button, t2 = exp.boks.get_button_press()
+		>>> exp.set('response', button)
+		>>> exp.set('response_time', t2-t1)
 		</DOC>"""
 
 		# In dummy mode, we morph into the dummy class
@@ -140,7 +148,6 @@ class libboks:
 		# Get the response time and use this to determine the end time
 		self.dev.write(CMD_GET_TD)
 		time = start_time + .001 * self.read_ulong()
-		#time = .001 * self.read_ulong()
 		# Return
 		if button == button_timeout:
 			return None, time
@@ -173,6 +180,10 @@ class libboks:
 		
 		Returns:
 		The number of buttons
+		
+		Example:
+		>>> i = exp.boks.button_count()
+		>>> print 'Your Boks has %d buttons' % i
 		</DOC>"""
 		
 		self.dev.write(CMD_GET_BTNCNT)
@@ -182,7 +193,11 @@ class libboks:
 
 		"""<DOC>
 		Neatly close the device. This will deactivate the boks and close the #
-		serial port connection.
+		serial port connection. OpenSesame will do this automatically when the #
+		experiment ends.
+		
+		Example:
+		>>> exp.boks.close()
 		</DOC>"""
 
 		self.msg('closing')
@@ -204,6 +219,14 @@ class libboks:
 		A (button, timestamp) tuple. If a timeout occured, the button is None. #
 		Otherwise buttons are integers. The timestamp is a float value in #
 		milliseconds.
+		
+		Example:
+		>>> # Collect a response with a 2000ms timeout
+		>>> exp.boks.set_timeout(2000)
+		>>> t1 = self.time()
+		>>> button, t2 = exp.boks.get_button_press()
+		>>> exp.set('response', button)
+		>>> exp.set('response_time', t2-t1)		
 		</DOC>"""
 
 		return self._get_button(CMD_WAIT_PRESS)
@@ -217,6 +240,14 @@ class libboks:
 		A (button, timestamp) tuple. If a timeout occured, the button is None. #
 		Otherwise buttons are integers. The timestamp is a float value in #
 		milliseconds.
+		
+		Example:
+		>>> # Collect a button release with a 2000ms timeout
+		>>> exp.boks.set_timeout(2000)
+		>>> t1 = self.time()
+		>>> button, t2 = exp.boks.get_button_release()
+		>>> exp.set('response', button)
+		>>> exp.set('response_time', t2-t1)		
 		</DOC>"""
 
 		return self._get_button(CMD_WAIT_RELEASE)
@@ -228,6 +259,11 @@ class libboks:
 
 		Returns:
 		A list of buttons that are currently presed
+		
+		Example:
+		>>> l = exp.boks.get_button_state()
+		>>> if 1 in l:
+		>>> 	print 'Button 1 is pressed'
 		</DOC>"""
 
 		self.dev.write(CMD_BUTTON_STATE)
@@ -237,10 +273,16 @@ class libboks:
 
 		"""<DOC>
 		Retrieves the list of buttons that are 'active', i.e. that are #
-		used by get_button_press() and get_button_release().
+		used by get_button_press(), get_button_release(), and #
+		get_button_state().
 
 		Returns:
 		A list of active buttons. For example, [1,2,3,4].
+		
+		Example:
+		>>> l = exp.boks.get_buttons()
+		>>> if 1 in l:
+		>>> 	print 'Button 1 is currently being monitored'
 		</DOC>"""
 
 		self.dev.write(CMD_GET_BUTTONS)
@@ -253,6 +295,11 @@ class libboks:
 
 		Returns:
 		A timeout value in milliseconds or None if no timeout is set
+		
+		Example:
+		>>> exp.boks.set_timeout(2000)
+		>>> t = exp.boks.get_timeout()
+		>>> print 'The Boks timeout is currently set to %d ms' % t
 		</DOC>"""
 
 		self.dev.write(CMD_GET_TIMEOUT)
@@ -286,6 +333,11 @@ class libboks:
 		Returns:
 		A (firmware_version, model) tuple. The firmware_version is a string of #
 		the format X.Y.Z. The model is a short string.
+		
+		Example:
+		>>> firmware, model = exp.boks.info()
+		>>> print 'Boks model: %s' % model
+		>>> print 'Boks firmware: %s % firmware
 		</DOC>"""
 
 		return self.firmware_version, self.model
@@ -338,8 +390,20 @@ class libboks:
 
 		Arguments:
 		buttons			--	a list of buttons, where each button is an #
-							integer. To enable all buttons (except for the
+							integer. To enable all buttons (except for the #
 							photodiode), use None.
+							
+		Example:
+		>>> # Only use buttons 1 and 2
+		>>> exp.boks.set_buttons([1,2])
+		
+		Example:
+		>>> # Use all buttons except for the photodiode
+		>>> exp.boks.set_buttons(None)
+		
+		Example:
+		>>> # Only use the photodiode (button 8)
+		>>> exp.boks.set_buttons([8])
 		</DOC>"""
 
 		if buttons == None:
@@ -378,6 +442,14 @@ class libboks:
 		Keyword arguments:
 		continuous		--	True for continuous, False for discontinuous
 							(default=True)
+							
+		Example:		
+		>>> exp.boks.set_continuous(True)
+		>>> t1 = exp.time()
+		>>> # If some button is not pressed, this will return right away
+		>>> button, t2 = exp.boks.get_button_release()
+		>>> exp.set('response', button)
+		>>> exp.set('response_time', t2-t1)		
 		</DOC>"""
 
 		self.dev.write(CMD_SET_CONTINUOUS)
@@ -394,6 +466,14 @@ class libboks:
 		Keyword arguments:
 		on	--	Indicates whether the LED should be on (True) or off (False) #
 				(default=True)
+				
+		Example:
+		>>> # Blink LED five time
+		>>> for i in range(5):
+		>>> 	exp.boks.set_led(True)
+		>>> 	self.sleep(500)
+		>>> 	exp.boks.set_led(False)
+		>>> 	self.sleep(500)
 		</DOC>"""
 		
 		if on:
@@ -409,6 +489,11 @@ class libboks:
 		Arguments:
 		timeout			--	a value in milliseconds. Use 0 or None to disable #
 							timeout
+							
+		Example:
+		>>> exp.boks.set_timeout(2000)
+		>>> t = exp.boks.get_timeout()
+		>>> print 'The Boks timeout is currently set to %d ms' % t							
 		</DOC>"""
 
 		if timeout == None:
@@ -434,7 +519,7 @@ class libboks:
 		A timestamp in milliseconds
 		"""
 
-		return .001 * time.time()
+		return 1000. * time.time()
 
 	def write_ulong(self, l):
 

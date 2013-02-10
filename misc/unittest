@@ -25,7 +25,7 @@ import imp
 import os
 
 libboks = imp.load_source('libboks', '../opensesame/boks/libboks.py')
-N = 1000
+N = 100
 	
 def test_commspeed(b, f, N=N):
 	
@@ -52,19 +52,16 @@ def test_commspeed(b, f, N=N):
 		temporal precision of the Boks, `CMD_SET_T1` is most important.\n\n''' % N)
 	
 	cmd_list = [
-		('Set timestamp 1', 'b.dev.write(libboks.CMD_SET_T1)'),
-		('Set timestamp 2', 'b.dev.write(libboks.CMD_SET_T2)'),
-		('Set active buttons', 'b.set_buttons( [1, 2, 3, 4] )'),
-		('Set timeout', 'b.set_timeout(5000)'),
-		('Turn on LED', 'b.set_led(True)'),
-		('Get button state', 'b.get_button_state()'),
-		('Retrieve button press (continuous mode)', 'b.get_button_press()'),
-		('Retrieve button release (continuous mode)', 'b.get_button_release()'),
+		('Set T1', 1, 0, 'b.dev.write(libboks.CMD_SET_T1)'),		
+		('Get active buttons', 1, 1, \
+			'b.dev.write(libboks.CMD_GET_BUTTONS);b.dev.read(1)'),				
+		('Get TD', 1, 4, \
+			'b.dev.write(libboks.CMD_GET_TD);b.dev.read(4)'),
+		('Wait for button release', 3, 5, \
+			'b.get_button_release()'),					
 		]
 		
 	print 'Testing each command %d times' % N
-	print 'Hold one button down and press enter to continue'
-	raw_input()
 		
 	# Suppress debug output and enable continuous mode
 	def dummy(x): pass
@@ -73,10 +70,10 @@ def test_commspeed(b, f, N=N):
 	b.set_buttons(None)
 	
 	# Run all commands using timeit
-	f.write('|*Description*|*Command*|*Duration (ms)*|\n')
-	for desc, cmd in cmd_list:
+	f.write('|*Description*|*Bytes sent*|*Bytes received*|*Command*|*Duration (ms)*|\n')
+	for desc, send, recv, cmd in cmd_list:
 		t = timeit(cmd, setup='from __main__ import b, libboks', number=N)
-		f.write('|%s|`%s`|%.2f|\n' % (desc, cmd, 1000.*t/N))
+		f.write('|%s|%d|%d|`%s`|%.2f|\n' % (desc, send, recv, cmd, 1000.*t/N))
 		print '[%.2fms] %s' % (1000.*t/N, cmd)
 	f.write('\n')
 		
@@ -155,23 +152,26 @@ def test_latency(b, f, N=N):
 			a[i] = t2-t1			
 		f.write('|%d|%.2f|%.2f|%.2f|%.2f|\n' % (button, a.mean(), a.std(),
 			a.min(), a.max()))
-	f.write('\n')
+	
+		if '--plot' in sys.argv:
+			ax = plt.subplot(111)
+			a *= 1000
+			plt.clf()
+			plt.figure(figsize=(6,4))
+			plt.plot(a, '.', color='#888a85')	
+			#plt.ylim(50, 150)
+			plt.axhline(a.mean(), color='#3465a4')
+			plt.xlabel('Test #')
+			plt.ylabel('Response latency ($\mu$s)')
+			plt.text(.5, .9, \
+				'mean = %.2f$\mu$s, std = %.2f$\mu$s, min = %.2f$\mu$s, max = %.2f$\mu$s' % \
+				(a.mean(), a.std(), a.min(), a.max()), horizontalalignment='center', \
+				verticalalignment='center', transform=ax.transAxes)
+			plt.savefig('png/latency%d.png' % button)
+			f.write('![](png/latency%d.png)\n\n' % button)
+			plt.show()			
 			
-		#ax = plt.subplot(111)
-		#a *= 1000
-		#plt.clf()
-		#plt.figure(figsize=(6,4))
-		#plt.plot(a, '.', color='#888a85')	
-		##plt.ylim(50, 150)
-		#plt.axhline(a.mean(), color='#3465a4')
-		#plt.xlabel('Test #')
-		#plt.ylabel('Response latency ($\mu$s)')
-		#plt.text(.5, .9, 'mean = %.2f$\mu$s, std = %.2f$\mu$s, min = %.2f$\mu$s, max = %.2f$\mu$s' % \
-			#(a.mean(), a.std(), a.min(), a.max()), horizontalalignment='center', \
-			#verticalalignment='center', transform=ax.transAxes)
-		#plt.savefig('png/latency%d.png' % button)
-		#f.write('![](png/latency%d.png)\n\n' % button)
-		#plt.show()
+	f.write('\n')			
 		
 def test_buttons(b, f):
 	
@@ -189,12 +189,12 @@ def test_buttons(b, f):
 	print 'Timeout: %s' % b.get_timeout()
 
 	print 'Waiting for button press'
-	t1 = .001 * time()
+	t1 = 1000. * time()
 	button, t2 = b.get_button_press()
 	print 'Received button %s press in %.2f ms' % (button, t2-t1)
 
 	print 'Waiting for button release'
-	t1 = .001 * time()
+	t1 = 1000. * time()
 	button, t2 = b.get_button_release()
 	print 'Received button %s release in %.2f ms' % (button, t2-t1)
 
@@ -202,12 +202,12 @@ def test_buttons(b, f):
 	b.set_continuous(True)
 
 	print 'Waiting for button press'
-	t1 = .001 * time()
+	t1 = 1000. * time()
 	button, t2 = b.get_button_press()
 	print 'Received button %s press in %.2f ms' % (button, t2-t1)
 
 	print 'Waiting for button release'
-	t1 = .001 * time()
+	t1 = 1000. * time()
 	button, t2 = b.get_button_release()
 	print 'Received button %s release in %.2f ms' % (button, t2-t1)
 	
@@ -245,7 +245,7 @@ def test_photodiode(b, f):
 	b.set_timeout(None)
 	b.set_continuous(True)
 	print 'Waiting for button press'
-	t1 = .001 * time()
+	t1 = 1000. * time()
 	button, t2 = b.get_button_press()
 	print 'Received button %s press in %.2f ms' % (button, t2-t1)
 		
