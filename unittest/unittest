@@ -24,8 +24,10 @@ from matplotlib import pyplot as plt
 import imp
 import os
 
+# Load libboks dynamically, so we always have the latest version from the
+# repository.
 libboks = imp.load_source('libboks', '../opensesame/boks/libboks.py')
-N = 100
+N = 10
 	
 def test_commspeed(b, f, N=N):
 	
@@ -41,6 +43,7 @@ def test_commspeed(b, f, N=N):
 	
 	Arguments:
 	b	--	a Boks instance
+	f	--	a file object
 	
 	Keyword arguments:
 	N	--	the number of test runs to conduct
@@ -61,7 +64,7 @@ def test_commspeed(b, f, N=N):
 			'b.get_button_release()'),					
 		]
 		
-	print 'Testing each command %d times' % N
+	print 'Testing each command %d times ...' % N
 		
 	# Suppress debug output and enable continuous mode
 	def dummy(x): pass
@@ -84,6 +87,7 @@ def test_noise(b, f, N=N):
 
 	Arguments:
 	b	--	a Boks instance
+	f	--	a file object
 	
 	Keyword arguments:
 	N	--	the number of test runs to conduct	
@@ -102,9 +106,9 @@ def test_noise(b, f, N=N):
 	for i in l:
 		for state in (1,0):
 			if state == 1:
-				print 'Press button %d' % i
+				print 'Press and hold button %d ...' % i
 			else:
-				print 'Release button %d' % i
+				print 'Release button %d ...' % i
 			while True:
 				if i in b.get_button_state() and state == 1:
 					break
@@ -126,6 +130,7 @@ def test_latency(b, f, N=N):
 	
 	Arguments:
 	b	--	a Boks instance
+	f	--	a file object
 	
 	Keyword arguments:
 	N	--	the number of test runs to conduct
@@ -142,7 +147,7 @@ def test_latency(b, f, N=N):
 	
 	for button in b.get_buttons():
 		b.set_buttons([button])
-		print 'Press button %d ...' % button
+		print 'Press and hold button %d ...' % button
 		b.get_button_press()
 		b.set_continuous(True)
 		a = np.empty(N)
@@ -180,6 +185,7 @@ def test_buttons(b, f):
 	
 	Arguments:
 	b	--	a Boks instance
+	f	--	a file object
 	"""	
 
 	b.set_timeout(5000)
@@ -220,6 +226,7 @@ def test_led(b, f):
 	
 	Arguments:
 	b	--	a Boks instance
+	f	--	a file object
 	"""		
 
 	print 'Testing LED (it should blink 5 times)'
@@ -229,26 +236,44 @@ def test_led(b, f):
 		b.set_led(False)
 		sleep(.5)
 		
-def test_photodiode(b, f):
+def test_photodiode(b, f, N=N):
 	
 	"""
-	Tests whether the photodiode responds as expected. The photodiode is a
-	special button (8), which is switched off by default. This test is
-	performed in discontinuous mode.
+	Here we load an opensesame experiment that tests the photodiode responses
+	to a white display. This test requires a good computer and display!
 	
 	Arguments:
 	b	--	a Boks instance
-	"""			
+	f	--	a file object
 	
-	print 'Activating photodiode (= button 8)'
-	b.set_buttons( [8] )
-	b.set_timeout(None)
-	b.set_continuous(True)
-	print 'Waiting for button press'
-	t1 = 1000. * time()
-	button, t2 = b.get_button_press()
-	print 'Received button %s press in %.2f ms' % (button, t2-t1)
-		
+	Keyword arguments:
+	N	--	the number of test runs to conduct	
+	"""
+	
+	from libopensesame.experiment import experiment
+	import pygame
+	def dummy(): pass
+	f.write('## Photodiode test\n\n')	
+	f.write('''The values below correspond to the response time of the
+		photodiode to a white display, based on the `xpyriment` back-end and %d
+		measurements.\n\n''' % N)	
+	exp = experiment(string='test_photodiode.opensesame')
+	_time = b.time
+	b.time = pygame.time.get_ticks # Use the same timing function for the Boks
+	exp.boks = b # Make the boks available to the experiment
+	exp.N = N # Specify the number of runs
+	exp.fullscreen = 'yes'
+	exp.end = dummy # Do not call the end() function to avoid closing the Boks
+	exp.run() # Run!
+	M = exp.results.mean() # Get mean results
+	SD = exp.results.std() # Get std
+	_min = exp.results.min()
+	_max = exp.results.max()
+	f.write('*M* = %.2fms, *SD* = %.2f ms, min = %.2f ms, max = %.2f ms\n\n' % \
+		(M, SD, _min, _max))	
+	print 'M = %.2f, SD = %.2f' % (M, SD)
+	b.time = _time
+	
 if __name__ == '__main__':
 	
 	"""Main script"""
@@ -263,8 +288,7 @@ if __name__ == '__main__':
 	firmware, model = b.info()
 	f.write('Boks model: %s\n\n' % model)
 	f.write('Boks firmware: %s\n\n' % firmware)
-	f.write('Number of buttons (including photodiode): %d\n\n' % b.button_count())		
-	
+	f.write('Number of buttons (including photodiode): %d\n\n' % b.button_count())			
 	print 'Boks reports %d buttons' % b.button_count()
 	for arg in sys.argv:
 		func = 'test_%s' % arg
