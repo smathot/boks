@@ -48,8 +48,8 @@ if options.src == 'github':
 	# Get the Boks sketch from GitHub
 	fd = urllib2.urlopen(tagUrl)
 	tagJson = json.loads(fd.read())
-	release = tagJson[0]['name']
-	commit = tagJson[0]['commit']['sha']
+	release = tagJson[-1]['name']
+	commit = tagJson[-1]['commit']['sha']
 	srcUrl = \
 		'https://raw.github.com/smathot/boks/%s/arduino/boks/boks.ino.dist' \
 		% release	
