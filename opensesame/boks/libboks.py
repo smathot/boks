@@ -50,7 +50,7 @@ button_timeout = 255
 all_buttons = [] # Except the photodiode, which is button 8
 firmware_version_length = 5
 model_length = 16
-version = '0.1.9'
+version = '0.2.0'
 
 class boks_exception(Exception):
 
