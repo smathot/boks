@@ -254,7 +254,7 @@ if __name__ == '__main__':
 	"""Main script"""
 
 	print '\nBoks test suite\n'
-	print 'Usage: unittest [buttons] [led] [photodiode] [latency] [commspeed]\n'	
+	print 'Usage: unittest [buttons] [led] [photodiode] [latency] [commspeed] [noise]\n'	
 	b = libboks.libboks()
 	f = open('testlog.md', 'w')	
 	f.write('# Automated Boks test suite\n\n')
