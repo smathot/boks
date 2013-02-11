@@ -27,9 +27,12 @@ import os
 # Load libboks dynamically, so we always have the latest version from the
 # repository.
 libboks = imp.load_source('libboks', '../opensesame/boks/libboks.py')
-N = 10
+
+N = int(sys.argv[1])
+width = int(sys.argv[2])
+height = int(sys.argv[3])
 	
-def test_commspeed(b, f, N=N):
+def test_commspeed(b, f):
 	
 	"""
 	Tests the speed of the communication between the Boks and the PC. In
@@ -80,7 +83,7 @@ def test_commspeed(b, f, N=N):
 		print '[%.2fms] %s' % (1000.*t/N, cmd)
 	f.write('\n')
 		
-def test_noise(b, f, N=N):
+def test_noise(b, f):
 	
 	"""
 	Tests whether signal is constant
@@ -122,7 +125,7 @@ def test_noise(b, f, N=N):
 			print 'Match = %d, Non-match = %d' % (nMatch, nNonMatch)
 	f.write('\n')
 		
-def test_latency(b, f, N=N):
+def test_latency(b, f):
 	
 	"""
 	Tests the minimum response latency of the Boks. That is, the response time
@@ -236,7 +239,7 @@ def test_led(b, f):
 		b.set_led(False)
 		sleep(.5)
 		
-def test_photodiode(b, f, N=N):
+def test_photodiode(b, f):
 	
 	"""
 	Here we load an opensesame experiment that tests the photodiode responses
@@ -250,36 +253,57 @@ def test_photodiode(b, f, N=N):
 	N	--	the number of test runs to conduct	
 	"""
 	
+	script_template = open('test_photodiode.opensesame.dist').read()
+	
 	from libopensesame.experiment import experiment
+	from libopensesame import misc
 	import pygame
+	skip_first = 5
 	def dummy(): pass
 	f.write('## Photodiode test\n\n')	
 	f.write('''The values below correspond to the response time of the
-		photodiode to a white display, based on the `xpyriment` back-end and %d
-		measurements.\n\n''' % N)	
-	exp = experiment(string='test_photodiode.opensesame')
-	_time = b.time
-	b.time = pygame.time.get_ticks # Use the same timing function for the Boks
-	exp.boks = b # Make the boks available to the experiment
-	exp.N = N # Specify the number of runs
-	exp.fullscreen = 'yes'
-	exp.end = dummy # Do not call the end() function to avoid closing the Boks
-	exp.run() # Run!
-	M = exp.results.mean() # Get mean results
-	SD = exp.results.std() # Get std
-	_min = exp.results.min()
-	_max = exp.results.max()
-	f.write('*M* = %.2fms, *SD* = %.2f ms, min = %.2f ms, max = %.2f ms\n\n' % \
-		(M, SD, _min, _max))	
-	print 'M = %.2f, SD = %.2f' % (M, SD)
-	b.time = _time
+		photodiode to a white display, using OpenSesame %s with a resolution of
+		%dx%d and %d measurements (%d first measurements discarded to reach
+		stability).\n\n''' % (misc.version, width, height, N, skip_first))	
+		
+	f.write('|*Back-end*|*M (ms)*|*SD (ms)*|*min (ms)*|*max (ms)*|\n')	
+		
+	# Prevent OpenSesame from auto-closing the boks
+	_close = b.close
+	b.close = dummy
+		
+	for backend in ('xpyriment', 'psycho', 'legacy'):	
+		script = script_template % {'backend' : backend, 'width' : width, \
+			'height' : height}		
+		exp = experiment(string=script)		
+		_time = b.time
+		if backend == 'psycho':
+			from openexp._canvas import psycho
+			b.time = psycho._time
+		else:
+			b.time = pygame.time.get_ticks # Use the same timing function for the Boks
+		exp.boks = b # Make the boks available to the experiment
+		exp.N = N+skip_first # Specify the number of runs
+		exp.fullscreen = True
+		exp.run() # Run!
+		exp.results = exp.results[skip_first:]
+		M = exp.results.mean() # Get mean results
+		SD = exp.results.std() # Get std
+		_min = exp.results.min()
+		_max = exp.results.max()
+	
+		f.write('|%s|%.2f|%.2f|%.2f|%.2f|\n' % (backend, M, SD, _min, _max))
+		print '%s, M = %.2f, SD = %.2f' % (backend, M, SD)
+		
+	f.write('\n')
+	b.close = _close
 	
 if __name__ == '__main__':
 	
 	"""Main script"""
 
 	print '\nBoks test suite\n'
-	print 'Usage: unittest [buttons] [led] [photodiode] [latency] [commspeed] [noise]\n'	
+	print 'Usage: unittest [N] [width] [height] [buttons|led|photodiode|latency|commspeed|noise]\n'		
 	b = libboks.libboks()
 	f = open('testlog.md', 'w')	
 	f.write('# Automated Boks test suite\n\n')

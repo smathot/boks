@@ -15,6 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with boks. If not, see <http://www.gnu.org/licenses/>.
 
-./unittest latency noise commspeed photodiode
+./unittest $1 $2 $3 latency noise commspeed photodiode
 kramdown testlog.md > testlog.html
 wkhtmltopdf testlog.html testlog.pdf
