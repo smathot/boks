@@ -6,17 +6,25 @@ Usage
 
 To run individual tests, run:
 
-	./unittest [buttons] [led] [photodiode] [latency] [commspeed] [noise]
+	./unittest [N] [width] [height] [buttons|led|photodiode|latency|commspeed|noise]
+	
+For example, the following command will run the photodiode test 10 times on a 1280x1024 resolution
+	
+	./unittest 10 1280 1024 photodiode
 	
 To run the full test suite run:
 
-	./testreport
+	./testreport [N] [width] [height]
+	
+For example, the following command will run the full suite with 100 measurements per test on a 1024x768 resolution:
+
+	./testreport 100 1024 768
 	
 This will generate a test report in three formats:
 
 	testreport.md
 	testreport.html
-	tesrreport.pdf
+	testreport.pdf
 	
 Dependencies
 ------------
@@ -25,6 +33,6 @@ This test suite has been tested primarily on Ubuntu 12.04, although it should wo
 
 	sudo add-apt-repository ppa:smathot/cogscinl
 	sudo apt-get update
-	sudo apt-get install opensesame expyriment kramdown wkhtmltopdf rubygems
+	sudo apt-get install opensesame expyriment wkhtmltopdf rubygems
 	sudo gem install kramdown
 	

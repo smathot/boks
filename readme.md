@@ -1,19 +1,21 @@
 Boks
 ====
 
-Copyright (2012-2013) Sebastiaan Mathôt//
-http://www.cogsci.nl/boks
+Copyright (2012-2013) Sebastiaan Mathôt
 
 About
 -----
 
-Boks is an open-source response boks, based on the Arduino. This repository (will) contain(s) the Arduino firmware, Python interface, and OpenSesame plug-in.
-
-This repository contains the Boks firmware, test scripts, the Boks Python module, and the Boks OpenSesame plug-in.
+Boks is an open-source response boks, based on the Arduino.
 
 For more information, please visit
 
-- <http://www.cogsci.nl/boks>
+- <http://osdoc.cogsci.nl/boks>
+
+Contents
+--------
+
+This repository contains the Arduino firmware (sketch) (`arduino/boks`), Python module and OpenSesame plug-in (`opensesame/boks`), and test scripts (`unittest`). For instructions, please see the `readme.md` included in the various folders.
 
 License
 -------
