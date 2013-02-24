@@ -1,5 +1,5 @@
 # This is a template for an OpenSesame experiment, that will be automatically
-# modified by unittest
+# modified by unittest. Do not open this file in the OpenSesame GUI!
 
 set foreground "white"
 set coordinates "relative"

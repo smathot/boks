@@ -6,19 +6,19 @@ Usage
 
 To run individual tests, run:
 
-	./unittest [N] [width] [height] [buttons|led|photodiode|latency|commspeed|noise]
+	./unittest [N] [width] [height] [backends] [buttons|led|photodiode|latency|commspeed|noise]
 	
-For example, the following command will run the photodiode test 10 times on a 1280x1024 resolution
+For example, the following command will run the photodiode test 10 times on a 1280x1024 resolution with all three back-ends.
 	
-	./unittest 10 1280 1024 photodiode
+	./unittest 10 1280 1024 psycho,xpyriment,legacy photodiode
 	
 To run the full test suite run:
 
-	./testreport [N] [width] [height]
+	./testreport [N] [width] [height] psycho,xpyriment,legacy
 	
 For example, the following command will run the full suite with 100 measurements per test on a 1024x768 resolution:
 
-	./testreport 100 1024 768
+	./testreport 100 1024 768 psycho,xpyriment,legacy 
 	
 This will generate a test report in three formats:
 
