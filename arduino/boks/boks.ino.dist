@@ -18,7 +18,7 @@
 // The version and model are used to identify the box to the client. The
 // version must be a 5 char string. The model musy be a 16 char string,
 // optionally right-padded with whitespace for short mode names.
-#define VERSION 			"0.2.1"
+#define VERSION 			"0.2.2"
 #define MODEL 				"dev.boks        "
 
 // The respective pins on Arduino to which the buttons are connected. To disable
