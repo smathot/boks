@@ -145,7 +145,6 @@ void setup()
 	}
 	if (BUTTON_PIN_8) { // Photodiode
 		pinMode(BUTTON_PIN_8, INPUT);
-		digitalWrite(BUTTON_PIN_8, HIGH);
 	}	
 	pinMode(LED_PIN, OUTPUT);	
 	reset();
