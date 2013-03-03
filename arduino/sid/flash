@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+
+"""
+This file is part of Boks.
+
+Boks is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Boks is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Boks.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+import sys
+import subprocess
+from optparse import OptionParser
+
+# Parse command line arguments
+parser = OptionParser()
+parser.add_option("-u", "--upload", action='store_true', dest="upload",
+	help="Write serial ID to the Boks", default=False)
+parser.add_option("--sid", dest="sid", default='AA0000',
+	help="Specify a unique 6 character ID to the Arduino EEProm")
+(options, args) = parser.parse_args()
+
+if len(options.sid) != 6:
+	print 'The serial ID should be exactly six characters!'
+	sys.exit(1)
+
+print '\nBoks serial ID EEProm flash\n'
+
+# Customizing the Boks sketch based on the parameters
+print 'Writing modified boks.ino ...'
+fIno = open('sid.ino', 'w')
+s = open('sid.ino.dist').read() % {'sid' : options.sid}
+fIno.write(s)
+fIno.close()
+
+print 'Compiling sketch ...'
+if subprocess.call(['make']) > 0:
+	sys.exit(1)
+print 'Done'
+
+if options.upload:
+	print 'Uploading sketch ...'
+	if subprocess.call(['make', 'upload']) > 0:
+		sys.exit(1)
+	print 'Done'
