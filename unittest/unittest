@@ -299,12 +299,19 @@ def test_photodiode(b, f):
 	f.write('\n')
 	b.close = _close
 	
+def test_linkled(b, f):
+	
+	print 'Linking photodiode and LED'
+	b.dev.write(libboks.CMD_LINK_LED)
+	raw_input('Press return to end photodiode-LED link')
+	b.dev.write(chr(1))
+	
 if __name__ == '__main__':
 	
 	"""Main script"""
 
 	print '\nBoks test suite\n'
-	print 'Usage: unittest [N] [width] [height] [backends] [buttons|led|photodiode|latency|commspeed|noise]\n'		
+	print 'Usage: unittest [N] [width] [height] [backends] [buttons|led|photodiode|latency|commspeed|noise|linkled]\n'		
 	b = libboks.libboks()
 	f = open('testlog.md', 'w')	
 	f.write('# Automated Boks test suite\n\n')
@@ -313,6 +320,8 @@ if __name__ == '__main__':
 	firmware, model = b.info()
 	f.write('Boks model: %s\n\n' % model)
 	f.write('Boks firmware: %s\n\n' % firmware)
+	sid = b.get_sid()
+	f.write('Arduino serial ID: %s\n\n' % sid)
 	f.write('Number of buttons (including photodiode): %d\n\n' % b.button_count())			
 	print 'Boks reports %d buttons' % b.button_count()
 	for arg in sys.argv:
