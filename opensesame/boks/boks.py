@@ -28,7 +28,7 @@ class boks(item.item, generic_response.generic_response):
 
 	"""A plug-in for using the serial response box"""
 	
-	version = '0.2.2'
+	version = '0.2.3'
 
 	def __init__(self, name, experiment, string=None):
 
@@ -275,18 +275,21 @@ class boks_test_thread(QtCore.QThread):
 		_boks = imp.load_source("libboks", path)
 		try:
 			self.boks = _boks.libboks(dev, experiment=self.boks_item.experiment)
-			firmware_version, model = self.boks.info()
-			button_count = self.boks.button_count()			
+			firmware_version, model = self.boks.info()			
+			button_count = self.boks.button_count()	
+			sid = self.boks.get_sid()
 		except:
 			firmware_version = 'NA'
 			model = 'No boks detected'
 			button_count = 0
+			sid = '000000'
 			self.boks = None
 		self.boks_item.boks_widget.ui.edit_firmware_version.setText( \
 			firmware_version)
 		self.boks_item.boks_widget.ui.edit_model.setText(model)
 		self.boks_item.boks_widget.ui.spinbox_button_count.setValue( \
 			button_count)
+		self.boks_item.boks_widget.ui.edit_sid.setText(sid)
 			
 		# Change the icon for the buttons that are not reported by the device.
 		# The trick is to set all buttons and then see which buttons are

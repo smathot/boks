@@ -43,6 +43,8 @@ CMD_GET_BUTTONS		= chr(17)
 CMD_LED_ON			= chr(18)
 CMD_LED_OFF			= chr(19)
 CMD_GET_BTNCNT		= chr(20)
+CMD_GET_SID			= chr(21)
+CMD_LINK_LED		= chr(22)
 
 # Various parameters
 baudrate = 115200
@@ -50,7 +52,8 @@ button_timeout = 255
 all_buttons = [] # Except the photodiode, which is button 8
 firmware_version_length = 5
 model_length = 16
-version = '0.2.2'
+sid_length = 6
+version = '0.2.3'
 
 class boks_exception(Exception):
 
@@ -287,6 +290,22 @@ class libboks:
 
 		self.dev.write(CMD_GET_BUTTONS)
 		return self.byte_to_list(self.read_byte())
+	
+	def get_sid(self):
+		
+		"""<DOC>
+		Retrieves the Arduino serial ID.
+		
+		Returns:
+		A 7 character string containing the Arduino serial ID
+		
+		Example:
+		>>> sid = exp.boks.get_sid()
+		>>> print 'The Arduino serial ID of the Boks is %s' % sid
+		</DOC>"""
+		
+		self.dev.write(CMD_GET_SID)
+		return self.dev.read(sid_length)
 
 	def get_timeout(self):
 
@@ -493,7 +512,7 @@ class libboks:
 		Example:
 		>>> exp.boks.set_timeout(2000)
 		>>> t = exp.boks.get_timeout()
-		>>> print 'The Boks timeout is currently set to %d ms' % t							
+		>>> print 'The Boks timeout is currently set to %d ms' % t
 		</DOC>"""
 
 		if timeout == None:
@@ -570,6 +589,10 @@ class dummy(libboks):
 	def get_buttons(self):
 
 		return self.buttons
+	
+	def get_sid(self):	
+				
+		return 'AA0000'
 
 	def get_timeout(self):
 

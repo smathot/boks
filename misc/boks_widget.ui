@@ -58,6 +58,50 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="edit_dev">
+        <property name="toolTip">
+         <string>The frequence of the sound. Expecting a numeric value (frequency in Hertz) a note (like 'C#2' and 'A1') or a variable (like '[freq]')</string>
+        </property>
+        <property name="text">
+         <string>autodetect</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+       <widget class="QPushButton" name="button_start_test">
+        <property name="text">
+         <string>Start test</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_timeout">
+        <property name="text">
+         <string>Timeout</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="edit_correct_response"/>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QCheckBox" name="checkbox_dummy">
+        <property name="text">
+         <string>Dummy mode (use keyboard instead)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="edit_allowed_responses">
+        <property name="toolTip">
+         <string>Set the duration of the synth item. Expecting a duration in ms, 'sound' (to wait until the sound is finished playing), 'keypress', 'mouseclick', or a variable (e.g., '[synth_dur]').</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
       <item row="4" column="0">
        <widget class="QLabel" name="label_allowed_responses">
         <property name="text">
@@ -69,16 +113,6 @@
        <widget class="QLabel" name="label_correct_response">
         <property name="text">
          <string>Correct response</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="edit_correct_response"/>
-      </item>
-      <item row="2" column="0" colspan="2">
-       <widget class="QCheckBox" name="checkbox_dummy">
-        <property name="text">
-         <string>Dummy mode (use keyboard instead)</string>
         </property>
        </widget>
       </item>
@@ -122,35 +156,24 @@ color: rgb(255, 255, 255);</string>
         </layout>
        </widget>
       </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="edit_allowed_responses">
-        <property name="toolTip">
-         <string>Set the duration of the synth item. Expecting a duration in ms, 'sound' (to wait until the sound is finished playing), 'keypress', 'mouseclick', or a variable (e.g., '[synth_dur]').</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_dev">
-        <property name="text">
-         <string>Device</string>
-        </property>
-       </widget>
-      </item>
       <item row="8" column="0" colspan="2">
        <widget class="QWidget" name="widget_test" native="true">
         <layout class="QGridLayout" name="gridLayout_4">
          <property name="margin">
           <number>0</number>
          </property>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="edit_model">
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_sid">
+           <property name="text">
+            <string>Serial ID</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="edit_firmware_version">
            <property name="font">
             <font>
              <family>Monospace</family>
-             <italic>true</italic>
             </font>
            </property>
            <property name="readOnly">
@@ -172,40 +195,15 @@ color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
-          <widget class="QLineEdit" name="edit_firmware_version">
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="edit_sid">
            <property name="font">
             <font>
              <family>Monospace</family>
-             <italic>true</italic>
             </font>
            </property>
            <property name="readOnly">
             <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" colspan="2">
-          <widget class="QPushButton" name="button_stop_test">
-           <property name="text">
-            <string>Stop test</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_button_count">
-           <property name="text">
-            <string>Nr. of buttons</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QSpinBox" name="spinbox_button_count">
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="buttonSymbols">
-            <enum>QAbstractSpinBox::NoButtons</enum>
            </property>
           </widget>
          </item>
@@ -428,35 +426,59 @@ color: rgb(255, 255, 255);</string>
            </layout>
           </widget>
          </item>
+         <item row="0" column="0" colspan="2">
+          <widget class="QPushButton" name="button_stop_test">
+           <property name="text">
+            <string>Stop test</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_button_count">
+           <property name="text">
+            <string>Nr. of buttons</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QSpinBox" name="spinbox_button_count">
+           <property name="font">
+            <font>
+             <family>Monospace</family>
+            </font>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="buttonSymbols">
+            <enum>QAbstractSpinBox::NoButtons</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="edit_model">
+           <property name="font">
+            <font>
+             <family>Monospace</family>
+            </font>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
         </layout>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="edit_dev">
-        <property name="toolTip">
-         <string>The frequence of the sound. Expecting a numeric value (frequency in Hertz) a note (like 'C#2' and 'A1') or a variable (like '[freq]')</string>
-        </property>
-        <property name="text">
-         <string>autodetect</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0" colspan="2">
-       <widget class="QPushButton" name="button_start_test">
-        <property name="text">
-         <string>Start test</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_timeout">
-        <property name="text">
-         <string>Timeout</string>
-        </property>
        </widget>
       </item>
       <item row="5" column="1">
        <widget class="QLineEdit" name="edit_timeout"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_dev">
+        <property name="text">
+         <string>Device</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
