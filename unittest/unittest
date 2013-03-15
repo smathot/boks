@@ -32,6 +32,7 @@ N = int(sys.argv[1])
 width = int(sys.argv[2])
 height = int(sys.argv[3])
 backends = sys.argv[4].split(',')
+refreshRate = int(sys.argv[5])
 	
 def test_commspeed(b, f):
 	
@@ -300,11 +301,63 @@ def test_photodiode(b, f):
 	b.close = _close
 	
 def test_linkled(b, f):
+
+	"""
+	Enables the linkled until return is pressed.
+	
+	Arguments:
+	Arguments:
+	b	--	a Boks instance
+	f	--	a file object
+	"""
 	
 	print 'Linking photodiode and LED'
 	b.dev.write(libboks.CMD_LINK_LED)
 	raw_input('Press return to end photodiode-LED link')
 	b.dev.write(chr(1))
+	
+def test_refresh(b, f):
+
+	"""
+	Performs the refresh rate test.
+	
+	Arguments:
+	Arguments:
+	b	--	a Boks instance
+	f	--	a file object
+	"""
+
+	m = 5 # Margin
+	b.set_buttons([8])	
+	raw_input('Hold the photiode to a white CRT screen and press enter ...')
+	
+	# Do the measurements
+	a = np.zeros(N+m)
+	for i in range(N+m):
+		button, t = b.get_button_press()
+		a[i] = t		
+	a = a[m:]				
+	d = a[1:] - a[:-1]		
+	
+	f.write('## Photodiode refresh-rate test\n\n')	
+	f.write('''The values below correspond to the refresh rate as measured by
+		the photodiode of the Boks (based on %d measurements, %d first
+		measurements discarded to reach stability).\n\n''' % (N, m))					
+	f.write('''The actual refresh rate is %dHz, corresponding to an ideal
+		measurement of %.2f ms.\n\n''' % (refreshRate, 1000./refreshRate))	
+	fig = plt.figure(figsize=(10,4))
+	ax = plt.subplot(111)
+	plt.text(.5, .9, \
+		'mean = %.2fms, std = %.2fms, min = %.2fms, max = %.2fms' % \
+		(d.mean(), d.std(), d.min(), d.max()), horizontalalignment='center', \
+		verticalalignment='center', transform=ax.transAxes)
+	f.write('![](latency.png)\n\n')				
+	plt.axhline(1000./refreshRate, linestyle='--', color='black')
+	plt.ylim(0,20)
+	plt.plot(d, '.', color='black')
+	plt.xlabel('Refresh #')
+	plt.ylabel('Refresh interval (ms)')
+	plt.savefig('latency.png')
 	
 if __name__ == '__main__':
 	
