@@ -21,20 +21,20 @@
 // The version and model are used to identify the box to the client. The
 // version must be a 5 char string. The model musy be a 16 char string,
 // optionally right-padded with whitespace for short mode names.
-#define VERSION 			"0.2.3"
+#define VERSION 			"0.2.4"
 #define MODEL 				"dev.boks        "
 
 // The respective pins on Arduino to which the buttons are connected. To disable
 // a button, set the pin to zero. Buttons 1 - 7 are actual buttons, button 8 is
 // reserved for the photodiode.
-#define BUTTON_PIN_1 		8
-#define BUTTON_PIN_2 		11
-#define BUTTON_PIN_3 		9
-#define BUTTON_PIN_4 		10
-#define BUTTON_PIN_5		0
-#define BUTTON_PIN_6 		0
+#define BUTTON_PIN_1 		0
+#define BUTTON_PIN_2 		2
+#define BUTTON_PIN_3 		4
+#define BUTTON_PIN_4 		6
+#define BUTTON_PIN_5		8
+#define BUTTON_PIN_6 		10
 #define BUTTON_PIN_7 		0
-#define BUTTON_PIN_8		12 // Photodiode
+#define BUTTON_PIN_8		11 // Photodiode
 #define LED_PIN				13
 
 // The baud rate for serial port communication

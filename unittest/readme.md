@@ -10,7 +10,7 @@ To run individual tests, run:
 	
 For example, the following command will run the photodiode test 10 times on a 1280x1024 resolution with all three back-ends.
 	
-	./unittest 10 1280 1024 psycho,xpyriment,legacy photodiode
+	./unittest 10 1280 1024 psycho,xpyriment,legacy 60 photodiode
 	
 To run the full test suite run:
 
@@ -18,7 +18,7 @@ To run the full test suite run:
 	
 For example, the following command will run the full suite with 100 measurements per test on a 1024x768 resolution and a 60Hz refresh:
 
-	./testreport 100 1024 768 60 psycho,xpyriment,legacy 
+	./testreport 100 1024 768 psycho,xpyriment,legacy 60
 	
 This will generate a test report in three formats:
 
