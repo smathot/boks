@@ -21,11 +21,11 @@
 // The version and model are used to identify the box to the client. The
 // version must be a 5 char string. The model musy be a 16 char string,
 // optionally right-padded with whitespace for short mode names.
-#define VERSION 			"0.2.4"
+#define VERSION 			"0.2.5"
 #define MODEL 				"dev.boks        "
 
 // The respective pins on Arduino to which the buttons are connected. To disable
-// a button, set the pin to zero. Buttons 1 - 7 are actual buttons, button 8 is
+// a button, set the pin to -1. Buttons 1 - 7 are actual buttons, button 8 is
 // reserved for the photodiode.
 #define BUTTON_PIN_1 		0
 #define BUTTON_PIN_2 		2
@@ -33,7 +33,7 @@
 #define BUTTON_PIN_4 		6
 #define BUTTON_PIN_5		8
 #define BUTTON_PIN_6 		10
-#define BUTTON_PIN_7 		0
+#define BUTTON_PIN_7 		-1
 #define BUTTON_PIN_8		11 // Photodiode
 #define LED_PIN				13
 
@@ -129,14 +129,14 @@ void getButtonCnt()
 
 {			
 	Serial.write(
-		(BUTTON_PIN_1 > 0) + 
-		(BUTTON_PIN_2 > 0) + 
-		(BUTTON_PIN_3 > 0) + 
-		(BUTTON_PIN_4 > 0) + 
-		(BUTTON_PIN_5 > 0) + 
-		(BUTTON_PIN_6 > 0) + 
-		(BUTTON_PIN_7 > 0) + 
-		(BUTTON_PIN_8 > 0)
+		(BUTTON_PIN_1 >= 0) +
+		(BUTTON_PIN_2 >= 0) +
+		(BUTTON_PIN_3 >= 0) +
+		(BUTTON_PIN_4 >= 0) +
+		(BUTTON_PIN_5 >= 0) +
+		(BUTTON_PIN_6 >= 0) +
+		(BUTTON_PIN_7 >= 0) +
+		(BUTTON_PIN_8 >= 0)
 	);
 }
 
@@ -200,19 +200,19 @@ void reset()
 	t1.asLong = 0;
 	t2.asLong = 0;
 	// Turn on all buttons that are supported by the device
-	if (BUTTON_PIN_1) { button1 = 1; }
+	if (BUTTON_PIN_1 >= 0) { button1 = 1; }
 	else { button1 = 0; }
-	if (BUTTON_PIN_2) { button2 = 1; }
+	if (BUTTON_PIN_2 >= 0) { button2 = 1; }
 	else { button2 = 0; }
-	if (BUTTON_PIN_3) { button3 = 1; }
+	if (BUTTON_PIN_3 >= 0) { button3 = 1; }
 	else { button3 = 0; }
-	if (BUTTON_PIN_4) { button4 = 1; }
+	if (BUTTON_PIN_4 >= 0) { button4 = 1; }
 	else { button4 = 0; }
-	if (BUTTON_PIN_5) { button5 = 1; }
+	if (BUTTON_PIN_5 >= 0) { button5 = 1; }
 	else { button5 = 0; }
-	if (BUTTON_PIN_6) { button6 = 1; }
+	if (BUTTON_PIN_6 >= 0) { button6 = 1; }
 	else { button6 = 0; }
-	if (BUTTON_PIN_7) { button7 = 1; }
+	if (BUTTON_PIN_7 >= 0) { button7 = 1; }
 	else { button7 = 0; }
 	button8 = 0; // The photodiode is by default deactivated
 	continuous = 0;
@@ -248,14 +248,14 @@ void setButtons()
 		button8 = (c >> 7) & 1;
 	}
 	// Turn off buttons that are not supported by this device
-	if (!BUTTON_PIN_1) { button1 = 0; }
-	if (!BUTTON_PIN_2) { button2 = 0; }
-	if (!BUTTON_PIN_3) { button3 = 0; }
-	if (!BUTTON_PIN_4) { button4 = 0; }
-	if (!BUTTON_PIN_5) { button5 = 0; }
-	if (!BUTTON_PIN_6) { button6 = 0; }
-	if (!BUTTON_PIN_7) { button7 = 0; }
-	if (!BUTTON_PIN_8) { button8 = 0; }
+	if (BUTTON_PIN_1 < 0) { button1 = 0; }
+	if (BUTTON_PIN_2 < 0) { button2 = 0; }
+	if (BUTTON_PIN_3 < 0) { button3 = 0; }
+	if (BUTTON_PIN_4 < 0) { button4 = 0; }
+	if (BUTTON_PIN_5 < 0) { button5 = 0; }
+	if (BUTTON_PIN_6 < 0) { button6 = 0; }
+	if (BUTTON_PIN_7 < 0) { button7 = 0; }
+	if (BUTTON_PIN_8 < 0) { button8 = 0; }
 }
 
 void setup()
@@ -272,36 +272,36 @@ void setup()
 	}	
 	// Set up the buttons
 	Serial.begin(BAUD_RATE);
-	if (BUTTON_PIN_1) {
+	if (BUTTON_PIN_1 >= 0) {
 		pinMode(BUTTON_PIN_1, INPUT);
 		digitalWrite(BUTTON_PIN_1, HIGH);
 	}
-	if (BUTTON_PIN_2) {
+	if (BUTTON_PIN_2 >= 0) {
 		pinMode(BUTTON_PIN_2, INPUT);
 		digitalWrite(BUTTON_PIN_2, HIGH);
 	}
-	if (BUTTON_PIN_3) {
+	if (BUTTON_PIN_3 >= 0) {
 		pinMode(BUTTON_PIN_3, INPUT);
 		digitalWrite(BUTTON_PIN_3, HIGH);
 	}
-	if (BUTTON_PIN_4) {
+	if (BUTTON_PIN_4 >= 0) {
 		pinMode(BUTTON_PIN_4, INPUT);
 		digitalWrite(BUTTON_PIN_4, HIGH);
 	}
-	if (BUTTON_PIN_5) {
+	if (BUTTON_PIN_5 >= 0) {
 		pinMode(BUTTON_PIN_5, INPUT);
 		digitalWrite(BUTTON_PIN_5, HIGH);
 	}
-	if (BUTTON_PIN_6) {
+	if (BUTTON_PIN_6 >= 0) {
 		pinMode(BUTTON_PIN_6, INPUT);
 		digitalWrite(BUTTON_PIN_6, HIGH);
 	}
-	if (BUTTON_PIN_7) {
+	if (BUTTON_PIN_7 >= 0) {
 		pinMode(BUTTON_PIN_7, INPUT);
 		digitalWrite(BUTTON_PIN_7, HIGH);
 	}	
 	// Set up the photodiode
-	if (BUTTON_PIN_8) {
+	if (BUTTON_PIN_8 >= 0) {
 		pinMode(BUTTON_PIN_8, INPUT);
 	}	
 	pinMode(LED_PIN, OUTPUT);		
@@ -356,14 +356,14 @@ void loop()
 					Serial.write(255);
 					break;
 				}
-				if (BUTTON_PIN_1) { state1 = digitalRead(BUTTON_PIN_1); }				
-				if (BUTTON_PIN_2) { state2 = digitalRead(BUTTON_PIN_2); }
-				if (BUTTON_PIN_3) { state3 = digitalRead(BUTTON_PIN_3); }
-				if (BUTTON_PIN_4) { state4 = digitalRead(BUTTON_PIN_4); }
-				if (BUTTON_PIN_5) { state5 = digitalRead(BUTTON_PIN_5); }
-				if (BUTTON_PIN_6) { state6 = digitalRead(BUTTON_PIN_6); }
-				if (BUTTON_PIN_7) { state7 = digitalRead(BUTTON_PIN_7); }
-				if (BUTTON_PIN_8) { state8 = digitalRead(BUTTON_PIN_8); }
+				if (BUTTON_PIN_1 >= 0) { state1 = digitalRead(BUTTON_PIN_1); }
+				if (BUTTON_PIN_2 >= 0) { state2 = digitalRead(BUTTON_PIN_2); }
+				if (BUTTON_PIN_3 >= 0) { state3 = digitalRead(BUTTON_PIN_3); }
+				if (BUTTON_PIN_4 >= 0) { state4 = digitalRead(BUTTON_PIN_4); }
+				if (BUTTON_PIN_5 >= 0) { state5 = digitalRead(BUTTON_PIN_5); }
+				if (BUTTON_PIN_6 >= 0) { state6 = digitalRead(BUTTON_PIN_6); }
+				if (BUTTON_PIN_7 >= 0) { state7 = digitalRead(BUTTON_PIN_7); }
+				if (BUTTON_PIN_8 >= 0) { state8 = digitalRead(BUTTON_PIN_8); }
 				if (button1 && (continuous || pState1 == fromState)
 					&& state1 == toState) {
 					Serial.write(1);

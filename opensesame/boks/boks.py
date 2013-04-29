@@ -28,7 +28,7 @@ class boks(item.item, generic_response.generic_response):
 
 	"""A plug-in for using the serial response box"""
 	
-	version = '0.2.4'
+	version = '0.2.5'
 
 	def __init__(self, name, experiment, string=None):
 
