@@ -53,7 +53,7 @@ all_buttons = [] # Except the photodiode, which is button 8
 firmware_version_length = 5
 model_length = 16
 sid_length = 6
-version = '0.2.4'
+version = '0.2.6'
 
 class boks_exception(Exception):
 
@@ -607,6 +607,15 @@ class dummy(libboks):
 
 		self.buttons = buttons
 
+	def set_continuous(self, continuous=True):
+
+		pass
+
+	def set_led(self, on=True):
+
+		pass
+
 	def set_timeout(self, timeout):
 
 		self.timeout = timeout
+
