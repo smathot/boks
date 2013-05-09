@@ -53,7 +53,7 @@ all_buttons = [] # Except the photodiode, which is button 8
 firmware_version_length = 5
 model_length = 16
 sid_length = 6
-version = '0.2.6'
+version = '0.2.7'
 
 class boks_exception(Exception):
 
@@ -68,23 +68,26 @@ class libboks:
 	for use with the OpenSesame experiment builder
 	"""
 
-	def __init__(self, port=None, experiment=None, baudrate=115200, buttons=None, timeout=None):
+	def __init__(self, port=None, experiment=None, baudrate=115200, buttons=None, timeout=None, led=False):
 
 		"""<DOC>
-		Constructor
+		Constructor. A Boks object is created automatically the first time #
+		that a Boks plug-in is prepared in OpenSesame.
 
 		Keyword arguments:
-		port	 		-- 	the port to which the device is connected, None #
+		port	 		-- 	The port to which the device is connected, None #
 							for autodetect, or 'dummy' to use the keyboard as #
-							 dummy-boks (default=None)
-		experiment 		--	an OpenSesame experiment, or None to run in plain #
-							Python mode (default=None)
-		baudrate 		--	the baudrate of the boks, or None to use default #
+							dummy-boks. (default=None)
+		experiment 		--	An OpenSesame experiment, or None to run in plain #
+							Python mode. (default=None)
+		baudrate 		--	The baudrate of the boks, or None to use default. #
 							(default=None)
-		buttons 		--	a list of buttons that are used, or None to use #
-							all buttons (default=None)
-		timeout 		--	a timeout in milliseconds when collecting #
-							responses or None for no timeout (default=None)
+		buttons 		--	A list of buttons that are used, or None to use #
+							all buttons. (default=None)
+		timeout 		--	A timeout in milliseconds when collecting #
+							responses or None for no timeout. (default=None)
+		led				--	Indicates whether the LED should be switched on. #
+							(default=False)
 							
 		Example:
 		>>> # Collect a response with a 2000ms timeout
@@ -128,7 +131,8 @@ class libboks:
 		self.identify()
 		self.set_buttons(buttons)
 		self.set_timeout(timeout)
-		self.msg('ready')
+		self.set_led(on=led)
+		self.msg('ready')		
 
 	def _get_button(self, cmd_byte):
 
