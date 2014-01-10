@@ -46,14 +46,13 @@ CMD_GET_BTNCNT		= chr(20)
 CMD_GET_SID			= chr(21)
 CMD_LINK_LED		= chr(22)
 
-# Various parameters
+version = '0.2.8'
 baudrate = 115200
 button_timeout = 255
 all_buttons = [] # Except the photodiode, which is button 8
 firmware_version_length = 5
 model_length = 16
 sid_length = 6
-version = '0.2.7'
 
 class boks_exception(Exception):
 
@@ -104,7 +103,8 @@ class libboks:
 				raise boks_exception( \
 					'In order to use dummy mode, libboks must be used in OpenSesame mode')
 			self.__class__ = dummy
-			self.__init__(experiment=experiment, timeout=timeout, buttons=buttons)
+			self.__init__(experiment=experiment, timeout=timeout, buttons= \
+				buttons)
 			return
 
 		# Use OpenSesame if possible
@@ -542,7 +542,7 @@ class libboks:
 		A timestamp in milliseconds
 		"""
 
-		return 1000. * time.time()
+		return .001 * time.time()
 
 	def write_ulong(self, l):
 
@@ -556,8 +556,15 @@ class libboks:
 		self.dev.write(struct.pack('I', l))
 
 class dummy(libboks):
+	
+	"""
+	Emulates libboks using the keyboard. Only works when an OpenSesame
+	experiment is available.
+	"""
 
 	def __init__(self, experiment, buttons, timeout):
+		
+		"""See libboks."""
 
 		from libopensesame import debug
 		self.experiment = experiment
@@ -569,57 +576,92 @@ class dummy(libboks):
 		self.identify()
 
 	def close(self):
+		
+		"""See libboks."""
 
 		pass
 
 	def get_button_press(self):
+		
+		"""See libboks."""
 
 		from openexp.keyboard import keyboard
-		if self.buttons == None:
-			_buttons = None
-		else:
-			_buttons = [str(b) for b in self.buttons]
+		_buttons = [str(b) for b in self.buttons]
 		kb = keyboard(self.experiment, keylist=_buttons, timeout=self.timeout)
-		return kb.get_key()
+		key, timestamp = kb.get_key()
+		# Make sure that we return `int`s instead of `str`s
+		if key != None:
+			key = int(key)
+		return key, timestamp
 
 	def get_button_release(self):
+		
+		"""See libboks."""
 
 		return self.get_button_press()
 
 	def get_button_state(self):
+		
+		"""See libboks."""
 
-		return []
+		from openexp.keyboard import keyboard
+		_buttons = [str(b) for b in self.buttons]
+		kb = keyboard(self.experiment, keylist=_buttons, timeout=0)
+		key, timestamp = kb.get_key()
+		if key == None:
+			return []
+		return [int(key)]
 
 	def get_buttons(self):
+		
+		"""See libboks."""
 
 		return self.buttons
 	
-	def get_sid(self):	
-				
+	def get_sid(self):
+		
+		"""See libboks."""
+		
 		return 'AA0000'
 
 	def get_timeout(self):
+		
+		"""See libboks."""
 
 		return self.timeout
 
 	def identify(self):
+		
+		"""See libboks."""
 
 		self.firmware_version = '0.0.0'
 		self.model = 'dummy.boks'
 
 	def set_buttons(self, buttons):
+		
+		"""See libboks."""
 
-		self.buttons = buttons
+		if buttons == None:
+			# Accept only digits between 1 and 8 (incl.)
+			self.buttons = [str(i) for i in range(1, 9)]
+		else:
+			self.buttons = buttons
 
 	def set_continuous(self, continuous=True):
+		
+		"""See libboks."""
 
 		pass
 
 	def set_led(self, on=True):
+		
+		"""See libboks."""
 
 		pass
 
 	def set_timeout(self, timeout):
+		
+		"""See libboks."""
 
 		self.timeout = timeout
 
