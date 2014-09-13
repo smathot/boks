@@ -322,7 +322,6 @@ def test_refresh(b, f):
 	Performs the refresh rate test.
 	
 	Arguments:
-	Arguments:
 	b	--	a Boks instance
 	f	--	a file object
 	"""
@@ -358,7 +357,28 @@ def test_refresh(b, f):
 	plt.xlabel('Refresh #')
 	plt.ylabel('Refresh interval (ms)')
 	plt.savefig('latency.png')
-	
+
+def test_state(b, f, dur=5000):
+
+	"""
+	Performs the refresh rate test.
+
+	Arguments:
+	b	--	a Boks instance
+	f	--	a file object
+	"""
+
+	t0 = b.time()
+	print('Monitoring button state for %d ms' % dur)
+	while True:
+		t1 = b.time()
+		if t1 - t0 >= dur:
+			break
+		l = b.get_button_state()
+		if len(l) > 0:
+			print('%.2f\t%s' % (t1, l))
+	print('Done!')
+
 if __name__ == '__main__':
 	
 	"""Main script"""
