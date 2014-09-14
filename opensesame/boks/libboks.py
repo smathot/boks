@@ -46,7 +46,7 @@ CMD_GET_BTNCNT		= chr(20)
 CMD_GET_SID			= chr(21)
 CMD_LINK_LED		= chr(22)
 
-version = '0.3.0'
+version = '0.3.1'
 baudrate = 115200
 button_timeout = 255
 all_buttons = [] # Except the photodiode, which is button 8
@@ -66,9 +66,39 @@ class boks_exception(Exception):
 class libboks(object):
 
 	"""
-	desc:
-		Python library to interface with Boks, a button box for psychological
+	desc: |
+		A Python library to interface with Boks, a button box for psychological
 		and neuroscientific experiments.
+
+		If there is a Boks plug-in in your OpenSesame experiment, the `boks`
+		object can be accessed as `exp.boks` or `self.experiment.boks`.
+
+		__Example__:
+
+		~~~ {.python}
+		# Collect a response time with a 2000ms timeout
+		exp.boks.set_timeout(2000)
+		t1 = self.time()
+		button, t2 = exp.boks.get_button_press()
+		exp.set('response', button)
+		exp.set('response_time', t2-t1)
+		~~~
+
+		__Function list:__
+
+		%--
+		toc:
+			mindepth: 2
+			maxdepth: 2
+		--%
+
+		%--
+		constant:
+			ret_button: |
+				A (button, timestamp) tuple. If a timeout occured, `button` is
+				`None`, otherwise `button` is an integers. `timestamp` is a
+				float value in milliseconds.
+		--%
 	"""
 
 	def __init__(self, port=None, experiment=None, baudrate=115200,
@@ -165,8 +195,7 @@ class libboks(object):
 				type:	int
 
 		returns:
-			desc:	A (button, timestamp) tuple. If a timeout occured, the
-					button is `None`.
+			desc:	"%ret_button"
 			type:	tuple
 		"""
 
@@ -265,18 +294,16 @@ class libboks(object):
 			Collects a button press.
 
 		returns:
-			desc:	A (button, timestamp) tuple. If a timeout occured, the
-					button is `None`, otherwise buttons are integers. The
-					timestamp is a float value in milliseconds.
+			desc:	"%ret_button"
 			type:	tuple
 		
-		Example: |
+		example: |
 			# Collect a response with a 2000ms timeout
 			exp.boks.set_timeout(2000)
 			t1 = self.time()
 			button, t2 = exp.boks.get_button_press()
 			exp.set('response', button)
-		exp.set('response_time', t2-t1)
+			exp.set('response_time', t2-t1)
 		"""
 
 		return self._get_button(CMD_WAIT_PRESS)
@@ -288,9 +315,8 @@ class libboks(object):
 			Collects a button release.
 
 		returns:
-			desc:	A (button, timestamp) tuple. If a timeout occured, the
-					button is None. Otherwise buttons are integers. The
-					timestamp is a float value in milliseconds.
+			desc:	"%ret_button"
+			type:	tuple
 
 		example: |
 			# Collect a button release with a 2000ms timeout
@@ -316,7 +342,7 @@ class libboks(object):
 		example: |
 			l = exp.boks.get_button_state()
 			if 1 in l:
-				print 'Button 1 is pressed'
+				print('Button 1 is pressed')
 		"""
 
 		self.dev.write(CMD_BUTTON_STATE)
@@ -336,7 +362,7 @@ class libboks(object):
 		example: |
 			l = exp.boks.get_buttons()
 			if 1 in l:
-				print 'Button 1 is currently being monitored'
+				print('Button 1 is currently being monitored')
 		"""
 
 		self.dev.write(CMD_GET_BUTTONS)
@@ -564,13 +590,12 @@ class libboks(object):
 		"""
 		desc:
 			Turns the LED on or off.
-		
+
 		keywords:
-			on:
-				desc:	Indicates whether the LED should be on (True) or off
-						(False).
+			"on":
+				desc:	Indicates whether the LED should be on or off.
 				type:	bool
-				
+
 		example: |
 			# Blink LED five time
 			for i in range(5):
@@ -620,6 +645,9 @@ class libboks(object):
 	def time(self):
 
 		"""
+		visible:
+			False
+
 		desc:
 			A time function. In OpenSesame mode, the OpenSesame timer will be
 			used instead.
