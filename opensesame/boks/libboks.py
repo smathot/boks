@@ -46,7 +46,7 @@ CMD_GET_BTNCNT		= chr(20)
 CMD_GET_SID			= chr(21)
 CMD_LINK_LED		= chr(22)
 
-version = '1.0.1'
+version = '1.0.2'
 baudrate = 115200
 button_timeout = 255
 all_buttons = [] # Except the photodiode, which is button 8
@@ -171,6 +171,9 @@ class libboks(object):
 		else:
 			self.port = port
 		self.msg('port: %s' % self.port)
+		# Opening and closing the serial port unfreezes the Boks when it has not
+		# been neatly closed.
+		serial.Serial(self.port).close()
 		self.dev = serial.Serial(self.port, baudrate=baudrate)
 
 		# Set up link
