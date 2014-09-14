@@ -46,7 +46,7 @@ CMD_GET_BTNCNT		= chr(20)
 CMD_GET_SID			= chr(21)
 CMD_LINK_LED		= chr(22)
 
-version = '0.3.1'
+version = '1.0.0'
 baudrate = 115200
 button_timeout = 255
 all_buttons = [] # Except the photodiode, which is button 8
