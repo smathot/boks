@@ -15,20 +15,20 @@ You should have received a copy of the GNU General Public License
 along with OpenSesame.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from libopensesame import item, generic_response, exceptions, debug
+from libopensesame import item, generic_response, exceptions, debug, misc
 from libqtopensesame import qtplugin
 from libqtopensesame.misc import _
 from openexp.keyboard import keyboard
 import imp
 import os
 import os.path
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui, QtCore, uic
 
 # First try to load libboks from source, from the plug-in folder. If this fails,
 # try a plain import statement.
 try:
 	libboks = imp.load_source(u'libboks', os.path.join(os.path.dirname( \
-		__file__), u'libboks.py'))
+		__file__).decode(misc.filesystem_encoding()), u'libboks.py'))
 except:
 	import libboks
 
@@ -176,10 +176,8 @@ class qtboks(boks, qtplugin.qtplugin):
 		qtplugin.qtplugin.init_edit_widget(self, False)	
 		
 		self.boks_widget = QtGui.QWidget()
-		path = os.path.join(os.path.dirname(__file__), u"boks_widget_ui.py")
-		boks_widget_ui = imp.load_source(u"boks_widget_ui", path)
-		self.boks_widget.ui = boks_widget_ui.Ui_boks_widget()
-		self.boks_widget.ui.setupUi(self.boks_widget)
+		path = os.path.join(os.path.dirname(__file__), "boks_widget.ui")
+		self.boks_widget.ui = uic.loadUi(open(path), self.boks_widget)
 		self.experiment.main_window.theme.apply_theme(self.boks_widget)
 		self.boks_widget.ui.label_boks_icon.setPixmap(QtGui.QPixmap( \
 			self.experiment.resource(u"boks_large.png")))
@@ -191,12 +189,12 @@ class qtboks(boks, qtplugin.qtplugin):
 		for i in range(1,9):
 			icon = QtGui.QIcon()
 			icon.addPixmap(QtGui.QPixmap(os.path.join( \
-				os.path.dirname(__file__), u'icons', u'active%d.png' % i)),
+				os.path.dirname(__file__), 'icons', 'active%d.png' % i)),
 				QtGui.QIcon.Normal)
 			icon.addPixmap(QtGui.QPixmap(os.path.join( \
-				os.path.dirname(__file__), u'icons', u'inactive%d.png' % i)),
+				os.path.dirname(__file__), 'icons', 'inactive%d.png' % i)),
 				QtGui.QIcon.Disabled)
-			getattr(self.boks_widget.ui, u'button_%d' % i).setIcon(icon)
+			getattr(self.boks_widget.ui, 'button_%d' % i).setIcon(icon)
 		
 		self.edit_vbox.addWidget(self.boks_widget)
 		self.edit_vbox.addStretch()
@@ -270,7 +268,7 @@ class boks_test_thread(QtCore.QThread):
 			dev = None
 		self.boks_item.boks_widget
 		self.active = True
-		path = os.path.join(os.path.dirname(__file__), u"libboks.py")
+		path = os.path.join(os.path.dirname(__file__), "libboks.py")
 		_boks = imp.load_source(u"libboks", path)
 		try:
 			self.boks = _boks.libboks(dev, experiment=self.boks_item.experiment)
@@ -300,8 +298,8 @@ class boks_test_thread(QtCore.QThread):
 				if i not in l:
 					icon = QtGui.QIcon()
 					icon.addPixmap(QtGui.QPixmap(os.path.join( \
-						os.path.dirname(__file__), u'icons', \
-						u'unavailable.png')), QtGui.QIcon.Disabled)
+						os.path.dirname(__file__), 'icons', \
+						'unavailable.png')), QtGui.QIcon.Disabled)
 					getattr(self.boks_item.boks_widget.ui, u'button_%d' \
 						% i).setIcon(icon)
 		
@@ -317,5 +315,3 @@ class boks_test_thread(QtCore.QThread):
 				button.setEnabled(i in pressed_buttons)
 		if self.boks != None:
 			self.boks.close()
-		
-		
