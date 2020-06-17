@@ -1,0 +1,408 @@
+#!/usr/bin/env python
+
+# This file is part of boks.
+#
+# boks is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# boks is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with boks. If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+from time import time, sleep, strftime
+from timeit import timeit
+import numpy as np
+import platform
+from matplotlib import pyplot as plt
+import imp
+import os
+
+# Load libboks dynamically, so we always have the latest version from the
+# repository.
+libboks = imp.load_source('libboks', '../opensesame/boks/libboks.py')
+sys.path.append('/home/sebastiaan/git/OpenSesame')
+
+N = int(sys.argv[1])
+width = int(sys.argv[2])
+height = int(sys.argv[3])
+backends = sys.argv[4].split(',')
+refreshRate = int(sys.argv[5])
+    
+def test_commspeed(b, f):
+    
+    """
+    Tests the speed of the communication between the Boks and the PC. In
+    general, commands that are sent to the Arduino should be much faster than
+    commands that involve bidirectional communication. With respect to response
+    time accuracy, the most important command is CMD_SET_T1, because T1 is the
+    timestamp that is used to base the response times on. If CMD_SET_T1 takes
+    too long to return, the Arduino and computer clocks will not be synchronized
+    properly, and response time accuracy will suffer. Realistic values are in
+    the 50 microsecond range (0.05 ms).
+    
+    Arguments:
+    b	--	a Boks instance
+    f	--	a file object
+    
+    Keyword arguments:
+    N	--	the number of test runs to conduct
+    """
+    
+    f.write('## Communication speed\n\n')
+    f.write('''The measurements below reflect the time it takes for various
+        forms of communication to complete, based on %d measurements. For the
+        temporal precision of the Boks, `CMD_SET_T1` is most important.\n\n''' % N)
+    
+    cmd_list = [
+        ('Set T1', 1, 0, 'b.dev.write(libboks.CMD_SET_T1)'),		
+        ('Get active buttons', 1, 1, \
+            'b.dev.write(libboks.CMD_GET_BUTTONS);b.dev.read(1)'),				
+        ('Get TD', 1, 4, \
+            'b.dev.write(libboks.CMD_GET_TD);b.dev.read(4)'),
+        ('Wait for button release', 3, 5, \
+            'b.get_button_release()'),					
+        ]
+        
+    print('Testing each command %d times ...' % N)
+        
+    # Suppress debug output and enable continuous mode
+    def dummy(x): pass
+    b.msg = dummy
+    b.set_continuous(True)
+    b.set_buttons(None)
+    
+    # Run all commands using timeit
+    f.write('|*Description*|*Bytes sent*|*Bytes received*|*Command*|*Duration (ms)*|\n')
+    for desc, send, recv, cmd in cmd_list:
+        t = timeit(cmd, setup='from __main__ import b, libboks', number=N)
+        f.write('|%s|%d|%d|`%s`|%.2f|\n' % (desc, send, recv, cmd, 1000.*t/N))
+        print('[%.2fms] %s' % (1000.*t/N, cmd))
+    f.write('\n')
+        
+def test_noise(b, f):
+    
+    """
+    Tests whether signal is constant
+
+    Arguments:
+    b	--	a Boks instance
+    f	--	a file object
+    
+    Keyword arguments:
+    N	--	the number of test runs to conduct	
+    """
+    
+    f.write('## Noise test\n\n')
+    f.write('''The measurements below reflect the amount of noise in the signal,
+        i.e. the number of times that the measured button state does not
+        correspond to the goal state, based on %d measurements.\n\n''' % N)
+    
+    f.write('|*Button*|*Goal state*|*# Match*|*# Non-match*|\n')
+    b.set_buttons(range(1,8))
+    b.set_continuous(False)
+    l = b.get_buttons()
+    a = np.zeros(N)
+    for i in l:
+        for state in (1,0):
+            if state == 1:
+                print('Press and hold button %d ...' % i)
+            else:
+                print('Release button %d ...' % i)
+            while True:
+                if i in b.get_button_state() and state == 1:
+                    break
+                if i not in b.get_button_state() and state == 0:
+                    break
+            for j in range(N):
+                a[j] = int(i in b.get_button_state())
+            nMatch = sum(a == state)
+            nNonMatch = sum(a != state)
+            f.write('|%d|%d|%d|%d|\n' % (i, state, nMatch, nNonMatch))
+            print('Match = %d, Non-match = %d' % (nMatch, nNonMatch))
+    f.write('\n')
+        
+def test_latency(b, f):
+    
+    """
+    Tests the minimum response latency of the Boks. That is, the response time
+    to a continuously pressed button while the Boks is in continuous mode.
+    
+    Arguments:
+    b	--	a Boks instance
+    f	--	a file object
+    
+    Keyword arguments:
+    N	--	the number of test runs to conduct
+    """	
+
+    f.write('## Minimum response latency\n\n')	
+    f.write('''The values below correspond to the response time to a
+        continuously pressed button, based on %d measurements.\n\n''' % N)
+    f.write('|*Button*|*M (ms)*|*SD (ms)*|*Min (ms)*|*Max (ms)*|\n')
+    
+    b.set_buttons(range(1,8))
+    button_list = b.get_buttons()			
+    b.set_continuous(False)
+    
+    for button in b.get_buttons():
+        b.set_buttons([button])
+        print('Press and hold button %d ...' % button)
+        b.get_button_press()
+        b.set_continuous(True)
+        a = np.empty(N)
+        for i in range(N):
+            t1 = b.time()
+            button, t2 = b.get_button_press()
+            a[i] = t2-t1			
+        f.write('|%d|%.2f|%.2f|%.2f|%.2f|\n' % (button, a.mean(), a.std(),
+            a.min(), a.max()))
+    
+        if '--plot' in sys.argv:
+            ax = plt.subplot(111)
+            a *= 1000
+            plt.clf()
+            plt.figure(figsize=(6,4))
+            plt.plot(a, '.', color='#888a85')	
+            #plt.ylim(50, 150)
+            plt.axhline(a.mean(), color='#3465a4')
+            plt.xlabel('Test #')
+            plt.ylabel('Response latency ($\mu$s)')
+            plt.text(.5, .9, \
+                'mean = %.2f$\mu$s, std = %.2f$\mu$s, min = %.2f$\mu$s, max = %.2f$\mu$s' % \
+                (a.mean(), a.std(), a.min(), a.max()), horizontalalignment='center', \
+                verticalalignment='center', transform=ax.transAxes)
+            plt.savefig('png/latency%d.png' % button)
+            f.write('![](png/latency%d.png)\n\n' % button)
+            plt.show()			
+            
+    f.write('\n')			
+        
+def test_buttons(b, f):
+    
+    """
+    Tests whether the buttons respond as expected.
+    
+    Arguments:
+    b	--	a Boks instance
+    f	--	a file object
+    """	
+
+    b.set_timeout(5000)
+
+    print('Available buttons (including photodiode): %s' % b.button_count()	)
+    print('Currently active buttons: %s' % b.get_buttons())
+    print('Timeout: %s' % b.get_timeout())
+
+    print('Waiting for button press')
+    t1 = 1000. * time()
+    button, t2 = b.get_button_press()
+    print('Received button %s press in %.2f ms' % (button, t2-t1))
+
+    print('Waiting for button release')
+    t1 = 1000. * time()
+    button, t2 = b.get_button_release()
+    print('Received button %s release in %.2f ms' % (button, t2-t1))
+
+    print('Enabling continuous mode')
+    b.set_continuous(True)
+
+    print('Waiting for button press')
+    t1 = 1000. * time()
+    button, t2 = b.get_button_press()
+    print('Received button %s press in %.2f ms' % (button, t2-t1))
+
+    print('Waiting for button release')
+    t1 = 1000. * time()
+    button, t2 = b.get_button_release()
+    print('Received button %s release in %.2f ms' % (button, t2-t1))
+    
+    print('Done')
+
+def test_led(b, f):
+    
+    """
+    Tests whether the LED can be switched on and off.
+    
+    Arguments:
+    b	--	a Boks instance
+    f	--	a file object
+    """		
+
+    print('Testing LED (it should blink 5 times)')
+    for i in range(5):
+        b.set_led(True)
+        sleep(.5)
+        b.set_led(False)
+        sleep(.5)
+        
+def test_photodiode(b, f):
+    
+    """
+    Here we load an opensesame experiment that tests the photodiode responses
+    to a white display. This test requires a good computer and display!
+    
+    Arguments:
+    b	--	a Boks instance
+    f	--	a file object
+    
+    Keyword arguments:
+    N	--	the number of test runs to conduct	
+    """
+    
+    script_template = open('test_photodiode.opensesame.dist').read()
+    
+    from libopensesame.experiment import experiment
+    from libopensesame import metadata
+    import pygame
+    skip_first = 5
+    def dummy(): pass
+    f.write('## Photodiode test\n\n')	
+    f.write('''The values below correspond to the response time of the
+        photodiode to a white display, using OpenSesame %s with a resolution of
+        %dx%d and %d measurements (%d first measurements discarded to reach
+        stability).\n\n''' % (metadata.__version__, width, height, N, skip_first))	
+        
+    f.write('|*Back-end*|*M (ms)*|*SD (ms)*|*min (ms)*|*max (ms)*|\n')	
+        
+    # Prevent OpenSesame from auto-closing the boks
+    _close = b.close
+    b.close = dummy
+        
+    for backend in backends:	
+        script = script_template % {'backend' : backend, 'width' : width, \
+            'height' : height}		
+        exp = experiment(string=script)		
+        _time = b.time
+        if backend == 'psycho':
+            from openexp._canvas import psycho
+            b.time = psycho._time
+        else:
+            b.time = pygame.time.get_ticks # Use the same timing function for the Boks
+        exp.boks = b # Make the boks available to the experiment
+        exp.N = N+skip_first # Specify the number of runs
+        exp.var.fullscreen = True
+        exp.run() # Run!
+        exp.results = exp.results[skip_first:]
+        M = exp.results.mean() # Get mean results
+        SD = exp.results.std() # Get std
+        _min = exp.results.min()
+        _max = exp.results.max()
+    
+        f.write('|%s|%.2f|%.2f|%.2f|%.2f|\n' % (backend, M, SD, _min, _max))
+        print('%s, M = %.2f, SD = %.2f' % (backend, M, SD))
+        
+    f.write('\n')
+    b.close = _close
+    
+def test_linkled(b, f):
+
+    """
+    Enables the linkled until return is pressed.
+    
+    Arguments:
+    Arguments:
+    b	--	a Boks instance
+    f	--	a file object
+    """
+    
+    print('Linking photodiode and LED')
+    b.dev.write(libboks.CMD_LINK_LED)
+    raw_input('Press return to end photodiode-LED link')
+    b.dev.write(chr(1))
+    
+def test_refresh(b, f):
+
+    """
+    Performs the refresh rate test.
+    
+    Arguments:
+    b	--	a Boks instance
+    f	--	a file object
+    """
+
+    m = 5 # Margin
+    b.set_buttons([8])	
+    raw_input('Hold the photiode to a white CRT screen and press enter ...')
+    
+    # Do the measurements
+    a = np.zeros(N+m)
+    for i in range(N+m):
+        button, t = b.get_button_press()
+        a[i] = t		
+    a = a[m:]				
+    d = a[1:] - a[:-1]		
+    
+    f.write('## Photodiode refresh-rate test\n\n')	
+    f.write('''The values below correspond to the refresh rate as measured by
+        the photodiode of the Boks (based on %d measurements, %d first
+        measurements discarded to reach stability).\n\n''' % (N, m))					
+    f.write('''The actual refresh rate is %dHz, corresponding to an ideal
+        measurement of %.2f ms.\n\n''' % (refreshRate, 1000./refreshRate))	
+    fig = plt.figure(figsize=(10,4))
+    ax = plt.subplot(111)
+    plt.text(.5, .9, \
+        'mean = %.2fms, std = %.2fms, min = %.2fms, max = %.2fms' % \
+        (d.mean(), d.std(), d.min(), d.max()), horizontalalignment='center', \
+        verticalalignment='center', transform=ax.transAxes)
+    f.write('![](latency.png)\n\n')				
+    plt.axhline(1000./refreshRate, linestyle='--', color='black')
+    plt.ylim(0,20)
+    plt.plot(d, '.', color='black')
+    plt.xlabel('Refresh #')
+    plt.ylabel('Refresh interval (ms)')
+    plt.savefig('latency.png')
+
+def test_state(b, f, dur=5000):
+
+    """
+    Performs the refresh rate test.
+
+    Arguments:
+    b	--	a Boks instance
+    f	--	a file object
+    """
+
+    t0 = b.time()
+    print('Monitoring button state for %d ms' % dur)
+    while True:
+        t1 = b.time()
+        if t1 - t0 >= dur:
+            break
+        l = b.get_button_state()
+        if len(l) > 0:
+            print('%.2f\t%s' % (t1, l))
+    print('Done!')
+
+if __name__ == '__main__':
+    
+    """Main script"""
+
+    print('\nBoks test suite\n')
+    print('Usage: unittest [N] [width] [height] [backends] [buttons|led|photodiode|latency|commspeed|noise|linkled]\n'		)
+    b = libboks.libboks()
+    f = open('testlog.md', 'w')	
+    f.write('# Automated Boks test suite\n\n')
+    f.write('*%s*\n\n' % strftime('%A %d, %B %Y, %H:%M:%S'))
+    f.write('Test system: `%s`\n\n' % platform.platform()) 
+    firmware, model = b.info()
+    f.write('Boks model: %s\n\n' % model)
+    f.write('Boks firmware: %s\n\n' % firmware)
+    sid = b.get_sid()
+    f.write('Arduino serial ID: %s\n\n' % sid)
+    f.write('Number of buttons (including photodiode): %d\n\n' % b.button_count())			
+    print('Boks reports %d buttons' % b.button_count())
+    for arg in sys.argv:
+        func = 'test_%s' % arg
+        if func in dir():
+            print('\nStarting test component "%s"\n' % func)
+            exec('%s(b, f)' % func)
+            print('\nDone!\n')
+    b.close()
+    f.close()
